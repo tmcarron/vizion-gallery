@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/authform.tsx","./src/colormatrix.tsx","./src/signup.tsx","./src/songdisplay.tsx","./src/auth.ts","./src/firebase.tsx","./src/index.ts","./src/main.tsx","./src/vite-env.d.ts","./src/player/audioplayercomponent.tsx","./src/models/album.ts","./src/models/artist.ts","./src/models/song.ts","./src/pages/homepage.tsx"],"version":"5.7.2"}
