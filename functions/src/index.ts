@@ -5,7 +5,7 @@
  * import {onDocumentWritten} from "firebase-functions/v2/firestore";
  *
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */ console.log("Plorp");
+ */
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript

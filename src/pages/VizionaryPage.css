@@ -1,0 +1,9 @@
+.VizionaryPage {
+  align-items: center;
+  text-align: center;
+}
+
+input {
+  margin: 5px;
+  width: 200px;
+}

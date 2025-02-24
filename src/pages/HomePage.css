@@ -1,0 +1,34 @@
+h1 {
+  text-align: center;
+}
+p {
+  margin: 10px;
+}
+a {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.summary-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: small;
+  width: 60%;
+}
+.HomePage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.donate-button {
+  padding: 10px;
+  margin-bottom: 20px;
+  margin: 10px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

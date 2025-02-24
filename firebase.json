@@ -7,36 +7,60 @@
     "rules": "storage.rules"
   },
   "functions": {
-    "source": "functions",
-    "codebase": "default",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "*.local"
-    ],
-    "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+    "default": {
+      "source": "functions",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+    },
+    "lib": {
+      "source": "lib",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+    },
+    "vizion-codebase": {
+      "source": "vizion-functions",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+    },
+    "source": "functions"
   },
   "emulators": {
     "functions": {
       "port": 3137
     },
     "firestore": {
-      "port": 3117
+      "port": 3517
     },
     "hosting": {
-      "port": 1323
+      "port": 1523
     },
     "storage": {
-      "port": 4137
+      "port": 4537
     },
     "ui": {
       "enabled": true
     },
     "singleProjectMode": true,
     "apphosting": {
-      "port": 3419,
+      "port": 1523,
       "rootDirectory": "./",
       "startCommandOverride": "npm run dev"
     },
@@ -44,7 +68,7 @@
       "port": 4135
     },
     "dataconnect": {
-      "port": 3341
+      "port": 2341
     }
   },
   "dataconnect": {

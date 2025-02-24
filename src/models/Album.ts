@@ -3,6 +3,6 @@ import Song from "./Song";
 export default interface Artist {
   id: string;
   albumName: string;
-  artist: Artist;
+  vizionaries: string[];
   songs: Song[];
 }
