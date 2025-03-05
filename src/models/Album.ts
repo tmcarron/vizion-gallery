@@ -1,8 +1,8 @@
-import Song from "./Song";
+import { Playlist } from "./Playlist";
 
-export default interface Artist {
-  id: string;
-  albumName: string;
+export default interface Album extends Playlist {
+  title: string;
+  coverArt: string;
   vizionaries: string[];
-  songs: Song[];
+  lastInteracted?: { [userId: string]: number };
 }

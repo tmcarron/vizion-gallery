@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 firebase.tsx
 functions/src/permissions.json
+
+/credentials/

@@ -1,0 +1,11 @@
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "https://vizion-gallery.web.app",
+      "https://vizion-gallery.com"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]

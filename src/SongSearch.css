@@ -1,0 +1,131 @@
+/* 🎵 Search Container */
+.song-search-container {
+  padding-top: 250px;
+  margin-top: 250px;
+  padding: 0.8rem;
+  border-radius: 6px;
+  background: var(--complementaryColor);
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 450px;
+  margin: 8px auto;
+  box-sizing: border-box;
+  height: 30%;
+  z-index: 2;
+}
+
+/* 🔎 Search Heading */
+.song-search-container h3 {
+  font-size: 1.2rem;
+  color: var(--contrastColor);
+  margin-bottom: 0.7rem;
+  text-align: center;
+}
+
+/* 🔍 Search Input */
+.song-search-input {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: border 0.2s ease-in-out;
+  display: block;
+  box-sizing: border-box;
+}
+
+.song-search-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0px 0px 4px rgba(0, 123, 255, 0.3);
+}
+
+/* 🎵 Song List */
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 0.8rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* 🎶 Individual Song Item */
+.song-item {
+  padding: 0.6rem;
+  border-radius: 5px;
+  margin-bottom: 0.4rem;
+  background: white;
+  box-shadow: 0px 1.5px 4px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.song-item:hover {
+  background: #eef6ff;
+  transform: scale(1.015);
+}
+
+/* 🎨 Cover Image */
+.song-cover {
+  width: 50px;
+  height: 50px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* 🎶 Song Details */
+.song-details {
+  flex-grow: 1;
+  min-width: 0; /* Allows flexbox to properly wrap content */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ✅ FIX: Allow song title & visionary name to wrap */
+.song-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 3px;
+  white-space: normal; /* ✅ ALLOWS MULTILINE WRAPPING */
+  word-wrap: break-word;
+  line-height: 1.2;
+}
+
+.song-vizionary {
+  font-size: 0.8rem;
+  color: #777;
+  white-space: normal; /* ✅ ALLOWS MULTILINE WRAPPING */
+  word-wrap: break-word;
+  line-height: 1.2;
+}
+
+/* 🎧 Select Button */
+.select-song-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  flex-shrink: 0;
+}
+
+.select-song-btn:hover {
+  background: #0056b3;
+}
+
+/* 🔄 Loading & No Results */
+.loading-text,
+.no-results-text {
+  text-align: center;
+  color: #666;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+}

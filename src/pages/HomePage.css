@@ -1,5 +1,6 @@
 h1 {
   text-align: center;
+  color: black !important;
 }
 p {
   margin: 10px;
@@ -17,18 +18,23 @@ a {
   font-size: small;
   width: 60%;
 }
+.HomePage p {
+  color: rgb(60, 60, 60) !important;
+}
 .HomePage {
+  top: 0;
+  padding-top: 70px;
+  padding-bottom: 250px;
+  height: 500%;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
+  overflow-y: scroll;
 }
-.donate-button {
-  padding: 10px;
-  margin-bottom: 20px;
-  margin: 10px;
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.HomePage .song-item {
+  width: 100%;
+}
+.HomePage .vizionary-link {
+  color: Purple !important;
 }

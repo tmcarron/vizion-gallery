@@ -1,0 +1,113 @@
+.vizionary-portal {
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: "Inter", sans-serif;
+  background-color: #f9f9fc;
+  border-radius: 12px;
+}
+
+.vizionary-portal h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+  text-align: center;
+}
+
+.vizionary-portal h2 {
+  font-size: 1.8rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #444;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.song-card,
+.album-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: #fafafa;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.song-card:hover,
+.album-item:hover {
+  transform: translateY(-5px);
+}
+
+.cover-art-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.song-card,
+.album-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.song-card input,
+.album-item input {
+  padding: 8px;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+}
+
+.song-card button,
+.album-item button {
+  padding: 8px 12px;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.song-card button:hover,
+.album-item button:hover {
+  background-color: #45a049;
+}
+
+.cover-art-preview {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.song-card label,
+.album-item label {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  color: #666;
+}
+.song-info {
+  display: flex;
+  flex-direction: column !important;
+}
+
+.vizionary-portal {
+  margin-bottom: 200px;
+}
+.vizionary-portal .song-list {
+  padding-top: 300px !important;
+  padding-left: 30px;
+}
+.vizionary-portal button {
+  width: 100%;
+  margin: 0;
+}

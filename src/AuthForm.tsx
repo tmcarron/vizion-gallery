@@ -1,60 +1,50 @@
-import "./AuthForm.css";
-import { useState } from "react";
-import axios from "axios";
+import { createContext, useState, ReactNode, useEffect } from "react";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { initializeApp } from "firebase/app";
 
-const apiBaseUrl = "http://localhost:5173/login";
-
-const AuthForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const handleLogin = async (e: any) => {
-    e.preventDefault();
-
-    try {
-      const response = await axios.post(apiBaseUrl, {
-        email,
-        password,
-      });
-      if (response.data.success) {
-        localStorage.setItem("authToken", response.data.token);
-        alert("Login successful");
-        // Perform additional actions, e.g., saving tokens or redirecting
-      } else {
-        setErrorMessage(response.data.message);
-      }
-    } catch (error) {}
-  };
-
-  return (
-    <div>
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Log In</button>
-      </form>
-
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-    </div>
-  );
+// ✅ Initialize Firebase (Replace with your Firebase config)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
 };
 
-export default AuthForm;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+interface AuthContextType {
+  user: User | null;
+  logout: () => void;
+}
+
+// ✅ Create Context
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // ✅ Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log("Auth state changed:", firebaseUser);
+      setUser(firebaseUser);
+    });
+
+    return () => unsubscribe(); // Cleanup listener
+  }, []);
+
+  const logout = () => auth.signOut();
+
+  return (
+    <AuthContext.Provider value={{ user, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

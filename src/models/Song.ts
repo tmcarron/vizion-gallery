@@ -1,13 +1,8 @@
-import Album from "./Album";
-
 export default interface Song {
   id: string;
-  audio: string;
   title: string;
+  audio: string; // ✅ Required
   coverArt: string;
-  album?: Album;
-  vizionaries: string[];
-  // vizionaryLinks: [string];
-  // viewsThisMonth: number;
-  // viewsAllTime: number;
+  vizionaries: string[]; // ✅ Required
+  lastInteracted?: { [userId: string]: number };
 }

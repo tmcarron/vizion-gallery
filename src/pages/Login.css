@@ -1,0 +1,132 @@
+/* Prevent overflow */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Root CSS Variables (Updated Dynamically) */
+:root {
+  --complementaryColor: gray;
+  --dominantColor: #ffffff;
+  --contrastColor: #000000;
+}
+
+/* Center the login form */
+.login-section {
+  padding-top: 70px;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Login container */
+.login-container {
+  width: 100%;
+  max-width: 380px;
+  padding: 30px;
+  background-color: var(--complementaryColor);
+  color: var(--contrastColor);
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+/* Header */
+.login-container h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: var(--contrastColor);
+}
+
+/* Input Fields */
+.login-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 1rem;
+  background: var(--contrastColor);
+  color: var(--dominantColor);
+  border: none;
+  border-radius: 8px;
+  transition: 0.3s ease-in-out;
+  box-sizing: border-box;
+}
+
+.login-container input::placeholder {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.login-container input:focus {
+  outline: none;
+  box-shadow: 0px 0px 10px var(--contrastColor);
+}
+
+/* Buttons */
+.login-container button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background: var(--contrastColor);
+  color: var(--dominantColor);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  margin-top: 15px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.login-container button:hover {
+  background: var(--contrastColor);
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.login-container button:disabled {
+  background: #888;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Error Message */
+.error-message {
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+/* Links */
+.login-container p {
+  font-size: 0.9rem;
+  margin-top: 15px;
+}
+
+.login-container a {
+  color: var(--contrastColor);
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.login-container a:hover {
+  color: var(--contrastColor);
+  opacity: 0.7;
+}
+
+/* Mobile Fixes */
+@media (max-width: 480px) {
+  .login-container {
+    width: 90%;
+    padding: 25px;
+  }
+}

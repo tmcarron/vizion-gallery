@@ -1,0 +1,49 @@
+.chat-list-container {
+  margin-top: 30px !important;
+  margin-right: auto;
+  margin-bottom: 0;
+  margin-left: auto;
+  max-width: 400px;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+li:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.user-list {
+  list-style: none;
+  padding: 0;
+}
+
+.user-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+}
+.user-list {
+  list-style: none;
+  padding: 0;
+}
+
+.user-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+}

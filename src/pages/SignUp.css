@@ -1,0 +1,113 @@
+/* Signup Page Styling */
+.signup-section {
+  padding-top: 60px;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease-in-out;
+}
+.signup-domain {
+  padding-top: 70px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signup-container {
+  width: 100%;
+  max-width: 380px;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  box-sizing: border-box;
+  transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+  background-color: var(--complementaryColor);
+  color: var(--dominantColor) !important; /* Text adapts */
+  transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+/* Header */
+.signup-container h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: var(--dominantColor) !important;
+  transition: color 0.3s ease-in-out;
+}
+
+/* Input Fields */
+.signup-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 1rem;
+  color: black; /* Text inside input */
+  border: none;
+  border-radius: 8px;
+  transition: 0.3s ease-in-out;
+  box-sizing: border-box;
+}
+
+.signup-container input::placeholder {
+  color: rgba(0, 0, 0, 0.6); /* Ensures contrast with background */
+}
+
+.signup-container input:focus {
+  outline: none;
+  box-shadow: 0px 0px 8px var(--dominantColor);
+}
+
+/* Buttons */
+.signup-container button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background-color: var(--dominantColor) !important;
+  color: var(--contrastColor);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+}
+
+.signup-container button:hover {
+  background: var(--dominantColor);
+  opacity: 0.85;
+  transform: scale(1.03);
+}
+
+/* Error Message */
+.error-message {
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+/* Links */
+.signup-container p {
+  font-size: 0.9rem;
+  margin-top: 15px;
+}
+
+.signup-container a {
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.signup-container a:hover {
+  opacity: 0.8;
+}
+
+/* Mobile Fixes */
+@media (max-width: 480px) {
+  .signup-container {
+    width: 90%;
+    padding: 25px;
+  }
+}

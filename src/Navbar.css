@@ -1,0 +1,43 @@
+/* Navbar container styles */
+.nav-bar {
+  position: fixed;
+  top: 0 !important;
+  width: 100%;
+  padding: 5px 2px;
+  display: flex;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease-in-out; /* Smooth color transitions */
+}
+
+/* Wrapper for chat link (ensures the bubble is positioned relative to the link) */
+
+/* Chat icon container if needed */
+.chat-icon {
+  position: relative;
+}
+
+.nav-bar .notification-bubble {
+  top: 0;
+  transform: translate(31px, -45px);
+  color: white !important;
+  z-index: 1000 !important;
+}
+/* Navigation button styling */
+.nav-button {
+  margin: 10px !important;
+  margin-bottom: 5px !important;
+  margin-top: 5px !important;
+  text-decoration: none;
+  margin-right: 20px;
+  transition: color 0.3s ease-in-out;
+}
+
+.logout-button {
+  color: var(--contrastColor);
+  background-color: var(--complementaryColor);
+  border: none;
+  padding: 5px;
+  border-radius: 5px;
+}

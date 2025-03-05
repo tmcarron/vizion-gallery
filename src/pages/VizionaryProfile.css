@@ -1,0 +1,63 @@
+.vizionary-profile {
+  padding-top: 100px; /* ✅ Increased padding to prevent top cut-off */
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  color: black;
+  overflow-y: auto; /* ✅ Enables scrolling */
+  max-height: 100vh; /* ✅ Prevents content from extending beyond viewport */
+}
+.vizionary-profile h1 {
+  color: black !important;
+}
+
+.vizionary-portal {
+  width: 100vw;
+  padding-top: 120px; /* ✅ Added more space at the top */
+  padding-bottom: 100px;
+}
+
+.song-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 70vw;
+  max-height: 400px; /* ✅ Ensures the song list is scrollable */
+  overflow-y: auto;
+  padding-top: 10px; /* ✅ Prevents first song from being cut off */
+}
+
+.song-item {
+  width: 70%;
+  margin-bottom: 10px; /* ✅ Adds spacing between songs */
+  padding: 10px;
+  border-radius: 8px;
+  background: white;
+  transition: background 0.2s ease-in-out;
+}
+
+.song-item:first-child {
+  margin-top: 10px; /* ✅ Ensures the first song is fully visible */
+}
+
+.song-item:hover {
+  background: #e6f2ff;
+}
+
+.song-cover {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.song-title {
+  font-size: 1rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

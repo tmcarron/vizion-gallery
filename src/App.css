@@ -2,6 +2,32 @@
   height: 100px;
   width: 100px;
 }
+/* Ensures content starts right below navbar */
+/* Ensure all content is pushed below the fixed navbar */
+.main-content {
+  margin-top: 80px; /* Adjust this if needed */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Fix navbar height & ensure it fully covers the top */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px; /* Ensure it has a proper height */
+  background: #2c1b14; /* Keep your existing navbar color */
+  padding: 1rem 0;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+/* Fix body margin issues */
+body {
+  margin: 0;
+  padding: 0;
+}
 .App {
   display: flex;
   flex-direction: column;

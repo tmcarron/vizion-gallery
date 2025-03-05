@@ -1,0 +1,106 @@
+.playlist-portal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* full viewport width */
+  height: 100vh; /* full viewport height */
+  pointer-events: none; /* allows clicking through wrapper, Rnd handles this internally */
+  z-index: 9999; /* clearly above everything else */
+}
+
+.playlist-portal-container {
+  padding: 10px;
+  pointer-events: all; /* ensures modal contents are interactive */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drag-handle {
+  cursor: move !important;
+  user-select: none !important;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header-container h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.create-playlist-section,
+.search-section {
+  margin-bottom: 16px;
+}
+
+.create-playlist-form input {
+  padding: 8px;
+  margin-right: 8px;
+}
+
+.create-playlist-form button {
+  padding: 8px 12px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.search-section input {
+  width: 100%;
+  padding: 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transform: translateX(-9px);
+}
+
+.playlist-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 16px;
+}
+
+.playlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.playlist-name {
+  font-size: 1rem;
+}
+
+.play-button {
+  background-color: #007bff;
+  border: none;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.header-container {
+  cursor: move; /* indicates draggable clearly */
+}
+.play-button:hover {
+  background-color: #0056b3;
+}
+.drag-handle {
+  cursor: move !important;
+  user-select: none !important;
+}

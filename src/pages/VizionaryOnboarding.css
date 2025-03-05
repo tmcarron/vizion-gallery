@@ -1,0 +1,80 @@
+.vizionary-onboarding {
+  box-sizing: border-box;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: var(--complementaryColor);
+  text-align: center;
+  transition: background 1.5s ease-in-out;
+  font-family: "bookmania", serif;
+}
+
+.typing-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--complementaryColor);
+  white-space: nowrap;
+  overflow: hidden;
+  animation: typing 2s steps(30, end), blink 0.8s infinite;
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink {
+  50% {
+    border-color: transparent;
+  }
+}
+
+.onboarding-container {
+  display: flex;
+
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.vizionary-input {
+  padding: 12px;
+  font-size: 1rem;
+  text-align: center;
+  border: none;
+  color: var(--dominantColor);
+  border-bottom: 2px solid var(--dominantColor);
+  transition: all 0.3s ease-in-out;
+  width: 350px;
+  font-family: "bookmania", serif;
+}
+
+.vizionary-input:focus {
+  border-bottom: 2px solid white;
+  outline: none;
+}
+
+.confirm-button {
+  padding: 12px 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: var(--complementaryColor);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  font-family: "bookmania", serif;
+  border-radius: 5px;
+  box-shadow: 0 0 15px var(--complementaryColor);
+}
+
+.confirm-button:hover {
+  box-shadow: 0 0 25px var(--complementaryColor);
+}

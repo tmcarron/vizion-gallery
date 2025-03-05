@@ -1,16 +1,173 @@
-.SongDisplay {
+/* 🎵 SONG DISPLAY STYLES */
+.song-display button {
+  color: black !important;
+}
+.playlist-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.playlist-modal {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  text-align: center;
+}
+
+.playlist-modal input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.playlist-modal button {
+  margin: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.song-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 🎨 GROUPED BY VIZIONARY */
+.vizionary-group {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--contrastColor);
+}
+
+/* 🎤 VIZIONARY NAME */
+.vizionary-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--contrastColor);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* 🎶 SONG LIST */
+.song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   width: 100%;
 }
-p {
-  text-align: center;
+
+/* 🎼 SONG ITEM */
+.song-item {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  transition: background 0.2s;
+  width: 70vw !important;
 }
-h1,
-h2,
-h3,
-ul,
-li {
-  text-align: center;
-  padding: 0;
+
+.song-item:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
-@media screen and (min-width: 600px) {
+.share-song-button {
+  padding: 3px;
+}
+.hidden {
+  display: none;
+}
+/* 🎵 SONG COVER */
+.song-cover {
+  width: 50px;
+  height: 50px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-right: 15px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+}
+.HomePage ul {
+  padding-top: 60px !important;
+}
+/* 🎧 SONG DETAILS */
+.song-details {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row !important;
+}
+
+/* 🎤 SONG TITLE */
+.song-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--contrastColor);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* 🟢 PLAY & ADD BUTTONS */
+.play-button,
+.add-to-playlist-button {
+  font-size: 18px;
+  color: var(--contrastColor);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* 👆 BUTTON HOVER EFFECT */
+.play-button:hover,
+.add-to-playlist-button:hover {
+  transform: scale(1.2);
+}
+
+/* 🎯 ICON SIZES */
+.play-button {
+  height: 20px;
+  width: 20px;
+
+  color: black;
+}
+.play-button img {
+  height: 20px;
+  width: 20px;
+  transform: translate(-9px, -6px);
+  color: black;
+}
+
+.add-to-playlist-button {
+  font-size: 32px;
+}
+.suggestions-dropdown {
+  position: absolute;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 250px;
+  z-index: 1000;
+}
+
+.suggestion-item {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: #f1f1f1;
 }

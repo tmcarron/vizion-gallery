@@ -1,12 +1,12 @@
-// DataFetching.tsx
 import { useContext, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { MusicContext } from "./Player/MusicContext";
 import { db } from "./firebase";
 import Song from "./models/Song";
+import { MusicContext } from "./Player/MusicContext";
 
 const DataFetching: React.FC = () => {
-  const { setAllSongs, setSelectedSong } = useContext(MusicContext);
+  const { setAllSongs, selectedSong, setSelectedSong } =
+    useContext(MusicContext);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,11 +20,15 @@ const DataFetching: React.FC = () => {
             audio: data.audio,
             coverArt: data.coverArt,
             vizionaries: data.vizionaries,
+            album: data.album,
           };
         });
+
         setAllSongs(songs);
-        if (songs.length > 0) {
-          // Set the first song as the default selected song.
+
+        // ✅ Only set `selectedSong` if it's null
+        if (!selectedSong && songs.length > 0) {
+          console.log("Setting default selected song:", songs[0].title);
           setSelectedSong(songs[0]);
         }
       } catch (error) {
@@ -33,9 +37,8 @@ const DataFetching: React.FC = () => {
     };
 
     fetchData();
-  }, [setAllSongs, setSelectedSong]);
+  }, [setAllSongs, selectedSong, setSelectedSong]);
 
-  // This component doesn't render anything
   return null;
 };
 

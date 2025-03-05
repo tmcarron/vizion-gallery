@@ -1,0 +1,10 @@
+/* 🔴 Simple red circle */
+.notification-bubble {
+  width: 8px;
+  height: 8px;
+  background: red;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 6px;
+  z-index: 9999;
+}
