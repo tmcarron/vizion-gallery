@@ -40,6 +40,7 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
   const [contrastColor, setContrastColor] = useState("#000000");
   const [complementaryColor, setComplementaryColor] = useState("#ff00ff");
 
+  // ✅ Converts Firebase Storage URLs
   const convertGsUrlToHttps = async (gsUrl?: string): Promise<string> => {
     if (!gsUrl || !gsUrl.startsWith("gs://"))
       return gsUrl || "/fallback-cover.jpg";
@@ -55,8 +56,11 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ✅ Fetch all songs from Firebase **only once**
   useEffect(() => {
     const fetchSongs = async () => {
+      console.log("🔥 Fetching songs from Firebase...");
+
       const snapshot = await getDocs(collection(db, "songs"));
       const songs: Song[] = await Promise.all(
         snapshot.docs.map(async (docSnap) => ({
@@ -67,22 +71,33 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
           vizionaries: docSnap.data().vizionaries || [],
         }))
       );
+
       setAllSongs(songs);
 
-      // Minimal explicit adjustment: set initial armedPlaylist
-      setArmedPlaylistState({
-        id: "all-songs",
-        name: "All Songs",
-        createdBy: "system",
-        createdAt: new Date(),
-        songIds: songs.map((song) => song.id),
-      });
-      setSelectedSongState(songs[0] || null);
+      // ✅ If no armed playlist, create a default one
+      setArmedPlaylistState(
+        (prev) =>
+          prev || {
+            id: "all-songs",
+            name: "All Songs",
+            createdBy: "system",
+            createdAt: new Date(),
+            songIds: songs.map((song) => song.id),
+          }
+      );
+
+      // ✅ Set first song if none is selected
+      setSelectedSongState(
+        (prev) => prev || (songs.length > 0 ? songs[0] : null)
+      );
     };
 
-    fetchSongs();
-  }, []);
+    if (allSongs.length === 0) {
+      fetchSongs();
+    }
+  }, []); // ✅ Runs only once on mount
 
+  // ✅ Fetch songs for a given playlist
   const fetchSongsForPlaylist = async (songIds: string[]): Promise<Song[]> => {
     const songs: Song[] = [];
     for (const songId of songIds) {
@@ -101,25 +116,42 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
     return songs;
   };
 
+  // ✅ Set a new armed playlist & update `selectedSong`
   const setArmedPlaylist = async (playlist: Playlist) => {
     const songs = await fetchSongsForPlaylist(playlist.songIds);
     setArmedPlaylistState(playlist);
-    if (songs.length > 0) setSelectedSongState(songs[0]);
+    if (songs.length > 0) {
+      setSelectedSongState(songs[0]); // ✅ Always start playing the first song in the new playlist
+    }
   };
 
+  // ✅ Update colors when `selectedSong` changes
   useEffect(() => {
+    if (!selectedSong?.coverArt) return;
+
+    let isCancelled = false;
     const updateColors = async () => {
-      if (!selectedSong?.coverArt) return;
-      const coverArtUrl = await convertGsUrlToHttps(selectedSong.coverArt);
-      const { base, contrast, complementary } =
-        await getBaseContrastAndComplementaryColor(coverArtUrl);
-      setDominantColor(base || "#ffffff");
-      setContrastColor(contrast || "#000000");
-      setComplementaryColor(complementary || "#ff00ff");
+      try {
+        const coverArtUrl = await convertGsUrlToHttps(selectedSong.coverArt);
+        if (!isCancelled) {
+          const { base, contrast, complementary } =
+            await getBaseContrastAndComplementaryColor(coverArtUrl);
+          setDominantColor(base || "#ffffff");
+          setContrastColor(contrast || "#000000");
+          setComplementaryColor(complementary || "#ff00ff");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching colors:", error);
+      }
     };
+
     updateColors();
+    return () => {
+      isCancelled = true;
+    }; // ✅ Prevents unnecessary re-fetching
   }, [selectedSong]);
 
+  // ✅ Update global CSS variables for colors
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--dominantColor",

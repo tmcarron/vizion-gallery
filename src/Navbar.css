@@ -1,32 +1,55 @@
 /* Navbar container styles */
 .nav-bar {
+  box-sizing: border-box;
   position: fixed;
   top: 0 !important;
+  left: 0;
   width: 100%;
+  height: 60px; /* Ensures a fixed height */
   padding: 5px 2px;
   display: flex;
-  z-index: 10;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
+  background-color: #222; /* Keep or adjust */
   transition: background-color 0.3s ease-in-out; /* Smooth color transitions */
 }
 
-/* Wrapper for chat link (ensures the bubble is positioned relative to the link) */
+/* Ensures content does not get cut off behind the navbar */
+body {
+  padding-top: 60px; /* Matches navbar height */
+}
+
+/* Adjust navbar height for mobile devices */
+@media screen and (max-height: 500px) {
+  .nav-bar {
+    height: 50px; /* Reduce navbar height for small screens */
+  }
+  body {
+    padding-top: 50px;
+  }
+}
+
+/* Navigation links */
+.nav-links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 15px;
+}
 
 /* Chat icon container if needed */
 .chat-icon {
   position: relative;
 }
 
-.nav-bar .notification-bubble {
-  top: 0;
-  transform: translate(31px, -45px);
-  color: white !important;
-  z-index: 1000 !important;
-}
+/* Notification bubble positioning */
+
 /* Navigation button styling */
 .nav-button {
-  margin: 10px !important;
+  margin: 1px !important;
+  padding-left: 5px !important;
+  padding-right: 5px;
   margin-bottom: 5px !important;
   margin-top: 5px !important;
   text-decoration: none;
@@ -34,6 +57,7 @@
   transition: color 0.3s ease-in-out;
 }
 
+/* Logout button */
 .logout-button {
   color: var(--contrastColor);
   background-color: var(--complementaryColor);

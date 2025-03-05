@@ -6,7 +6,6 @@ import { db } from "./firebase";
 import { useAuth } from "./AuthContext";
 import { MusicContext } from "./Player/MusicContext";
 import PlaylistPortal from "./pages/PlaylistPortal";
-import NotificationBubble from "./NotificationBubble";
 import { useNotification } from "./NotificationContext";
 import "./NavBar.css";
 
@@ -32,9 +31,6 @@ const NavBar: React.FC = () => {
 
     return unsubscribeUser;
   }, [user]);
-  useEffect(() => {
-    console.log("👀 UNREAD COUNT RIGHT NOW:", unreadCount);
-  }, [unreadCount]);
 
   useEffect(() => {
     console.log("🔥 NavBar unreadCount:", unreadCount);
@@ -49,88 +45,93 @@ const NavBar: React.FC = () => {
   return (
     <>
       <nav className="nav-bar" style={{ backgroundColor: dominantColor }}>
-        <Link to="/" className="nav-button" style={{ color: contrastColor }}>
-          Home
-        </Link>
-
-        {!user ? (
-          <Link
-            to="/login"
-            className="nav-button"
-            style={{ color: contrastColor }}
-          >
-            Login
+        <section className="nav-links">
+          <Link to="/" className="nav-button" style={{ color: contrastColor }}>
+            Home
           </Link>
-        ) : (
-          <>
-            <button
-              className="nav-button"
-              style={{ color: contrastColor }}
-              onClick={() => setShowPlaylistPortal(true)}
-            >
-              Playlists
-            </button>
 
-            {vizionaryName ? (
-              <>
-                <Link
-                  to="/vizionary-portal"
-                  className="nav-button"
-                  style={{ color: contrastColor }}
-                >
-                  Vizionary Portal
-                </Link>
-                <Link
-                  to="/music-upload"
-                  className="nav-button"
-                  style={{ color: contrastColor }}
-                >
-                  Music Upload
-                </Link>
-              </>
-            ) : isVizionary ? (
-              <Link
-                to="/vizionary-onboarding"
-                className="nav-button"
-                style={{ color: contrastColor }}
-              >
-                Vizionary Onboarding
-              </Link>
-            ) : null}
-
-            <div className="chat-link-wrapper" style={{ position: "relative" }}>
-              <Link
-                to="/chat"
-                className="nav-button"
-                style={{ color: contrastColor }}
-              >
-                Chat
-              </Link>
-              {unreadCount > 0 && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    width: "8px",
-                    height: "8px",
-                    backgroundColor: "red",
-                    borderRadius: "50%",
-                    zIndex: 1000,
-                  }}
-                />
-              )}
-            </div>
-
-            <button
-              onClick={handleLogout}
+          {!user ? (
+            <Link
+              to="/login"
               className="nav-button"
               style={{ color: contrastColor }}
             >
-              Logout
-            </button>
-          </>
-        )}
+              Login
+            </Link>
+          ) : (
+            <>
+              <button
+                className="nav-button"
+                style={{ color: contrastColor }}
+                onClick={() => setShowPlaylistPortal(true)}
+              >
+                Playlists
+              </button>
+
+              {vizionaryName ? (
+                <>
+                  <Link
+                    to="/vizionary-portal"
+                    className="nav-button"
+                    style={{ color: contrastColor }}
+                  >
+                    Vizionary Portal
+                  </Link>
+                  <Link
+                    to="/music-upload"
+                    className="nav-button"
+                    style={{ color: contrastColor }}
+                  >
+                    Music Upload
+                  </Link>
+                </>
+              ) : isVizionary ? (
+                <Link
+                  to="/vizionary-onboarding"
+                  className="nav-button"
+                  style={{ color: contrastColor }}
+                >
+                  Vizionary Onboarding
+                </Link>
+              ) : null}
+
+              <div
+                className="chat-link-wrapper"
+                style={{ position: "relative" }}
+              >
+                <Link
+                  to="/chat"
+                  className="nav-button"
+                  style={{ color: contrastColor }}
+                >
+                  Chat
+                </Link>
+                {unreadCount > 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      right: 0,
+                      width: "8px",
+                      height: "8px",
+                      backgroundColor: "red",
+                      borderRadius: "50%",
+                      zIndex: 1000,
+                    }}
+                  />
+                )}
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="nav-button"
+                style={{ color: contrastColor }}
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </section>
       </nav>
 
       {showPlaylistPortal && user && (

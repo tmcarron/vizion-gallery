@@ -5,7 +5,6 @@ import { MusicContext } from "./MusicContext";
 import { storage } from "../firebase";
 import { getBaseContrastAndComplementaryColor } from "./ColorMatrix";
 import { Link } from "react-router-dom";
-import { Playlist } from "../models/Playlist";
 
 const AudioPlayerComponent: React.FC = () => {
   const {
@@ -23,7 +22,7 @@ const AudioPlayerComponent: React.FC = () => {
   const [contrastColor, setContrastColor] = useState("#fff");
   const [setComplementaryColor] = useState("#ffff");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(true);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -34,25 +33,50 @@ const AudioPlayerComponent: React.FC = () => {
 
   // ✅ Update audio source when selectedSong changes
   useEffect(() => {
-    const loadSong = async () => {
-      if (audioRef.current && selectedSong?.audio) {
-        audioRef.current.pause();
+    const loadAndPlaySong = async () => {
+      if (!audioRef.current || !selectedSong?.audio) return;
 
-        let audioUrl = selectedSong.audio;
-        if (audioUrl.startsWith("gs://")) {
-          audioUrl = await getDownloadURL(ref(storage, selectedSong.audio));
+      console.log("🎵 Loading song:", selectedSong.title);
+
+      audioRef.current.pause();
+      let audioUrl = selectedSong.audio;
+
+      if (audioUrl.startsWith("gs://")) {
+        audioUrl = await getDownloadURL(ref(storage, selectedSong.audio));
+      }
+
+      audioRef.current.src = audioUrl;
+      audioRef.current.load();
+
+      audioRef.current.oncanplaythrough = async () => {
+        console.log("✅ Audio is ready to play");
+        try {
+          await audioRef.current!.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("❌ Error playing audio:", error);
         }
+      };
+    };
 
-        audioRef.current.src = audioUrl;
-        audioRef.current.load();
+    loadAndPlaySong();
+  }, [selectedSong]);
+  useEffect(() => {
+    if (!audioRef.current) return;
 
-        setIsPlaying(false); // ✅ Autoplay is OFF by default
+    const updateDuration = () => {
+      if (audioRef.current?.duration && !isNaN(audioRef.current.duration)) {
+        setDuration(audioRef.current.duration);
+        console.log("✅ Duration set:", audioRef.current.duration);
       }
     };
 
-    loadSong();
-  }, [selectedSong]);
+    audioRef.current.addEventListener("loadedmetadata", updateDuration);
 
+    return () => {
+      audioRef.current?.removeEventListener("loadedmetadata", updateDuration);
+    };
+  }, [selectedSong]);
   useEffect(() => {
     const fetchIcons = async () => {
       try {
@@ -72,10 +96,17 @@ const AudioPlayerComponent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const updateTime = () => setCurrentTime(audioRef.current?.currentTime || 0);
-    audioRef.current?.addEventListener("timeupdate", updateTime);
-    return () =>
+    if (!audioRef.current) return;
+
+    const updateTime = () => {
+      setCurrentTime(audioRef.current?.currentTime || 0);
+    };
+
+    audioRef.current.addEventListener("timeupdate", updateTime);
+
+    return () => {
       audioRef.current?.removeEventListener("timeupdate", updateTime);
+    };
   }, []);
 
   const handleSeek = useCallback(
@@ -146,6 +177,7 @@ const AudioPlayerComponent: React.FC = () => {
       setSelectedSong(firstShuffledSong);
     }
   };
+
   useEffect(() => {
     const handleEnded = () => handleNextSong();
     audioRef.current?.addEventListener("ended", handleEnded);
@@ -179,7 +211,11 @@ const AudioPlayerComponent: React.FC = () => {
     };
     updateCoverArt();
   }, [selectedSong]);
-
+  useEffect(() => {
+    console.log("🎵 selectedSong:", selectedSong);
+    console.log("🔗 selectedSong.audio:", selectedSong?.audio);
+    console.log("🎧 audioRef.current.src:", audioRef.current?.src);
+  }, [selectedSong]);
   return (
     <section className="audio-player">
       <div

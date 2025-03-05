@@ -140,7 +140,6 @@ const SongDisplay: React.FC<SongDisplayProps> = ({ vizionaryId }) => {
   }, [vizionaryId]);
 
   // Additional states to manage songs directly
-  const [songs, setSongs] = useState<Song[]>([]);
 
   const handleShareSong = (song: Song) => {
     setSelectedSongToShare(song);

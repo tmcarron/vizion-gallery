@@ -187,24 +187,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   // Send "Request Collaboration" button message
-  const sendCollaborationButton = async () => {
-    if (!user || !chatId) return;
-    try {
-      const messagesRef = collection(db, "chats", chatId, "messages");
-      const buttonMarkup = `<button class="chat-button" style="padding: 10px; background-color: #28a745; color: white; border-radius: 5px; cursor: pointer;">Request Collaboration</button>`;
-      await addDoc(messagesRef, {
-        from: user.uid,
-        to: receiverId,
-        text: buttonMarkup,
-        createdAt: serverTimestamp(),
-        read: false,
-        type: "button",
-        buttonType: "request-collaboration",
-      });
-    } catch (error) {
-      console.error("❌ Error sending collaboration button:", error);
-    }
-  };
 
   // Handle clicks on messages to detect playlist button clicks and arm the playlist.
   const handleMessageClick = (e: React.MouseEvent<HTMLDivElement>) => {

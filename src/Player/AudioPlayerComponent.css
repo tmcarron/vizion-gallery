@@ -115,6 +115,7 @@ p {
   gap: 16px;
   padding: 2px;
   width: 100%;
+  border: none !important;
 }
 
 /* 🌀 Shuffle & Collapse Buttons */
@@ -150,6 +151,7 @@ p {
 .audio-bar {
   width: 200px;
   height: 5px;
+  transform: translateY(-15px);
   border: none;
   appearance: none;
   background: rgba(var(--complementaryColor), 0.3);

@@ -5,9 +5,6 @@ import {
   collection,
   addDoc,
   serverTimestamp,
-  query,
-  getDocs,
-  where,
   onSnapshot,
   doc,
 } from "firebase/firestore";
