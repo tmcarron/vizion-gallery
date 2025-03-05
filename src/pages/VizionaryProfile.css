@@ -1,63 +1,88 @@
+/* VizionaryPortal.css */
+
 .vizionary-profile {
-  padding-top: 100px; /* ✅ Increased padding to prevent top cut-off */
   width: 100vw;
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  background: linear-gradient(to bottom, var(--complementaryColor), #ffffff);
+  padding: 60px 20px;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+.vizionary-profile h2 {
   color: black;
-  overflow-y: auto; /* ✅ Enables scrolling */
-  max-height: 100vh; /* ✅ Prevents content from extending beyond viewport */
 }
-.vizionary-profile h1 {
-  color: black !important;
-}
-
-.vizionary-portal {
-  width: 100vw;
-  padding-top: 120px; /* ✅ Added more space at the top */
-  padding-bottom: 100px;
-}
-
-.song-list {
+.profile-pic-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 70vw;
-  max-height: 400px; /* ✅ Ensures the song list is scrollable */
-  overflow-y: auto;
-  padding-top: 10px; /* ✅ Prevents first song from being cut off */
+  margin-bottom: 20px;
 }
 
-.song-item {
-  width: 70%;
-  margin-bottom: 10px; /* ✅ Adds spacing between songs */
-  padding: 10px;
-  border-radius: 8px;
-  background: white;
-  transition: background 0.2s ease-in-out;
-}
-
-.song-item:first-child {
-  margin-top: 10px; /* ✅ Ensures the first song is fully visible */
-}
-
-.song-item:hover {
-  background: #e6f2ff;
-}
-
-.song-cover {
-  width: 50px;
-  height: 50px;
+.profile-pic {
+  width: 180px;
+  height: 180px;
   object-fit: cover;
-  border-radius: 4px;
-  margin-right: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.vizionary-header {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.bio-container {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 500px;
+  margin-bottom: 20px;
 }
 
-.song-title {
+.bio-container textarea {
+  resize: none;
+  padding: 15px;
   font-size: 1rem;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+.bio-container button,
+button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #4a90e2;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.bio-container button:hover,
+button:hover {
+  background-color: #357ab8;
+}
+
+.song-editor {
+  width: 90%;
+  max-width: 600px;
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-bar {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
 }

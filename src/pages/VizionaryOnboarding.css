@@ -1,6 +1,7 @@
 .vizionary-onboarding {
   box-sizing: border-box;
   padding: 20px;
+  background: linear-gradient(to top, var(--complementaryColor), white);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -15,7 +16,8 @@
 .typing-text {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--complementaryColor);
+  color: var(--dominantColor);
+  text-shadow: 1px 1px 1px 1px black;
   white-space: nowrap;
   overflow: hidden;
   animation: typing 2s steps(30, end), blink 0.8s infinite;
@@ -49,6 +51,7 @@
   font-size: 1rem;
   text-align: center;
   border: none;
+  background-color: white !important;
   color: var(--dominantColor);
   border-bottom: 2px solid var(--dominantColor);
   transition: all 0.3s ease-in-out;

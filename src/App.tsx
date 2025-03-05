@@ -19,6 +19,7 @@ import { NotificationProvider } from "./NotificationContext";
 import MusicUpload from "./MusicUpload";
 import PlaylistPortal from "./pages/PlaylistPortal";
 import ChatWindow from "./ChatWindow"; // ✅ Import Chat Window
+import VizionaryOnboarding from "./pages/VizionaryOnboarding";
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
@@ -38,7 +39,8 @@ const AppContent: React.FC = () => {
       <DataFetching />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/vizionaryportal" element={<VizionaryPortal />} />
+        <Route path="/vizionary-onboarding" element={<VizionaryOnboarding />} />
+        <Route path="/vizionary-portal" element={<VizionaryPortal />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
         <Route

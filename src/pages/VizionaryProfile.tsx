@@ -8,6 +8,8 @@ import SongDisplay from "../SongDisplay";
 const VizionaryProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [vizionaryName, setVizionaryName] = useState<string>("");
+  const [profilePic, setProfilePic] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -26,13 +28,20 @@ const VizionaryProfile: React.FC = () => {
 
         if (vizDocSnap.exists()) {
           const rawData = vizDocSnap.data();
-          // Use the field "vizionaryName" if it exists, otherwise "name"
           const name =
             rawData?.vizionaryName || rawData?.name || "Unnamed Vizionary";
+          const pic = rawData?.profilePic || "/default-profile.png";
+          const bioText =
+            rawData?.bio || "This vizionary has not written a bio yet.";
+
           setVizionaryName(name);
+          setProfilePic(pic);
+          setBio(bioText);
         } else {
           console.warn("Vizionary not found:", id);
           setVizionaryName("Unknown Vizionary");
+          setProfilePic("/default-profile.png");
+          setBio("Bio not available.");
         }
       } catch (error) {
         console.error("Error fetching vizionary data:", error);
@@ -50,7 +59,9 @@ const VizionaryProfile: React.FC = () => {
   return (
     <div className="vizionary-profile">
       <div className="vizionary-header">
+        <img src={profilePic} alt="Profile" className="profile-pic" />
         <h1 className="vizionary-name">{vizionaryName}</h1>
+        <p className="vizionary-bio">{bio}</p>
       </div>
       <SongDisplay vizionaryId={id!} />
     </div>

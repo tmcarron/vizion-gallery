@@ -252,9 +252,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
         <div className="pre-made-buttons">
           <button onClick={handleOpenPlaylistModal}>Send Playlist</button>
-          <button onClick={sendCollaborationButton}>
-            Send Collaboration Button
-          </button>
         </div>
 
         <div className="chat-messages" onClick={handleMessageClick}>

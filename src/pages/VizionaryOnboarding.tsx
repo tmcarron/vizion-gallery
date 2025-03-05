@@ -10,12 +10,12 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../AuthContext";
-import { MusicContext } from "../Player/MusicContext"; // 🎨 Dynamic Colors
+import { MusicContext } from "../Player/MusicContext";
 import "./VizionaryOnboarding.css";
 
 const VizionaryOnboarding: React.FC = () => {
   const { user } = useAuth();
-  const { dominantColor, contrastColor } = useContext(MusicContext); // 🎨 Get colors
+  const { dominantColor, contrastColor } = useContext(MusicContext);
   const [vizionaryName, setVizionaryName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,6 @@ const VizionaryOnboarding: React.FC = () => {
     checkVizionary();
   }, [user]);
 
-  // **Typing effect for introduction**
   useEffect(() => {
     const text = "What is your name, Vizionary?";
     let index = 0;
@@ -71,7 +70,6 @@ const VizionaryOnboarding: React.FC = () => {
     setSuccess(null);
 
     try {
-      // 🔍 Check if the Vizionary name is already taken
       const vizQuery = query(
         collection(db, "vizionaries"),
         where("name", "==", vizionaryName)
@@ -84,27 +82,25 @@ const VizionaryOnboarding: React.FC = () => {
         return;
       }
 
-      // ✅ Assign Vizionary status
+      const vizionaryId = doc(collection(db, "vizionaries")).id;
+
       const userRef = doc(db, "users", user!.uid);
       await updateDoc(userRef, {
         vizionaryName: vizionaryName,
         username: vizionaryName,
         isVizionary: true,
+        vizionaryId: vizionaryId,
       });
 
-      // ✅ Create Vizionary entry
-      const vizRef = doc(db, "vizionaries", user!.uid);
+      const vizRef = doc(db, "vizionaries", vizionaryId);
       await setDoc(vizRef, {
-        id: user!.uid,
+        id: vizionaryId,
         name: vizionaryName,
         userId: user!.uid,
       });
 
-      console.log(
-        `🎨 Vizionary name "${vizionaryName}" assigned to ${user!.uid}`
-      );
       setIsFirstTime(false);
-      setSuccess("Go on and create.");
+      setSuccess("Your Vizionary path begins!");
     } catch (err) {
       console.error("Error assigning Vizionary name:", err);
       setError("A great disturbance... please try again.");
@@ -114,13 +110,14 @@ const VizionaryOnboarding: React.FC = () => {
   };
 
   return (
-    <div className="vizionary-onboarding">
+    <div
+      className="vizionary-onboarding"
+      style={{ backgroundColor: dominantColor, color: contrastColor }}
+    >
       {isFirstTime ? (
-        <h2 className="typing-text" style={{ color: contrastColor }}>
-          {typingEffect}
-        </h2>
+        <h2 className="typing-text">{typingEffect}</h2>
       ) : (
-        <h2 style={{ color: contrastColor }}>
+        <h2>
           Welcome, <span className="vizionary-name">{vizionaryName}</span>
         </h2>
       )}
@@ -130,11 +127,12 @@ const VizionaryOnboarding: React.FC = () => {
           type="text"
           value={vizionaryName}
           onChange={(e) => setVizionaryName(e.target.value)}
-          placeholder="Enter your Vizionary name..."
-          className={`vizionary-input ${error ? "shake" : ""}`}
+          placeholder="Choose your Vizionary name"
+          className="vizionary-input"
           style={{
             borderColor: contrastColor,
             color: contrastColor,
+            backgroundColor: dominantColor,
           }}
           required
         />
@@ -145,14 +143,13 @@ const VizionaryOnboarding: React.FC = () => {
         <button
           onClick={handleVizionarySubmit}
           disabled={loading}
-          className={`confirm-button ${loading ? "loading" : ""}`}
+          className="confirm-button"
           style={{
             backgroundColor: contrastColor,
             color: dominantColor,
-            boxShadow: `0 0 15px ${contrastColor}`,
           }}
         >
-          {loading ? "Loading" : "Confirm Vizionary Name"}
+          {loading ? "Awakening..." : "Claim Your Name"}
         </button>
       </div>
     </div>

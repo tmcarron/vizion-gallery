@@ -9,4 +9,6 @@ export default interface Vizionary {
   songs: Song[];
   link: string;
   lastInteracted?: { [userId: string]: Timestamp };
+  bio: string;
+  profilePic: string;
 }

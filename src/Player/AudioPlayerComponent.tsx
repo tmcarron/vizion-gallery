@@ -5,6 +5,7 @@ import { MusicContext } from "./MusicContext";
 import { storage } from "../firebase";
 import { getBaseContrastAndComplementaryColor } from "./ColorMatrix";
 import { Link } from "react-router-dom";
+import { Playlist } from "../models/Playlist";
 
 const AudioPlayerComponent: React.FC = () => {
   const {
@@ -33,15 +34,11 @@ const AudioPlayerComponent: React.FC = () => {
 
   // ✅ Update audio source when selectedSong changes
   useEffect(() => {
-    if (!selectedSong || !selectedSong.audio) return;
-
-    const loadAndPlaySong = async () => {
-      if (audioRef.current) {
+    const loadSong = async () => {
+      if (audioRef.current && selectedSong?.audio) {
         audioRef.current.pause();
 
         let audioUrl = selectedSong.audio;
-
-        // ✅ Ensure URL conversion clearly
         if (audioUrl.startsWith("gs://")) {
           audioUrl = await getDownloadURL(ref(storage, selectedSong.audio));
         }
@@ -49,19 +46,11 @@ const AudioPlayerComponent: React.FC = () => {
         audioRef.current.src = audioUrl;
         audioRef.current.load();
 
-        audioRef.current.onloadedmetadata = () => {
-          setDuration(audioRef.current?.duration || 0);
-          setIsLoading(false);
-          audioRef
-            .current!.play()
-            .catch((err) => console.error("Play error:", err));
-        };
-
-        setIsPlaying(true);
+        setIsPlaying(false); // ✅ Autoplay is OFF by default
       }
     };
 
-    loadAndPlaySong();
+    loadSong();
   }, [selectedSong]);
 
   useEffect(() => {
@@ -138,20 +127,23 @@ const AudioPlayerComponent: React.FC = () => {
 
   // ✅ Handle Shuffle
   const handleShuffle = () => {
-    if (armedPlaylist!.songIds.length > 1) {
-      const shuffledSongIds = [...armedPlaylist!.songIds].sort(
-        () => Math.random() - 0.5
-      );
-      setArmedPlaylist({ ...armedPlaylist!, songIds: shuffledSongIds });
+    if (!armedPlaylist?.songIds.length) return;
 
-      const firstShuffledSong = allSongs.find(
-        (song) => song.id === shuffledSongIds[0]
-      );
-      if (firstShuffledSong) {
-        setSelectedSong(firstShuffledSong);
-      } else {
-        console.warn("⚠️ First shuffled song not found:", shuffledSongIds[0]);
-      }
+    const shuffledSongIds = [...armedPlaylist.songIds].sort(
+      () => Math.random() - 0.5
+    );
+
+    setArmedPlaylist({
+      ...armedPlaylist,
+      songIds: shuffledSongIds,
+    });
+
+    const firstShuffledSong = allSongs.find(
+      (song) => song.id === shuffledSongIds[0]
+    );
+
+    if (firstShuffledSong) {
+      setSelectedSong(firstShuffledSong);
     }
   };
   useEffect(() => {

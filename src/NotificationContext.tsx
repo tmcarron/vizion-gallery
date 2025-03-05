@@ -46,10 +46,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       where("participants", "array-contains", user.uid)
     );
 
-    const unsubscribeChats = onSnapshot(chatsQuery, (chatsSnapshot) => {
-      const unsubscribeMsgs: (() => void)[] = [];
+    const unsubChats = onSnapshot(chatsQuery, (chatsSnap) => {
+      const messageUnsubs: (() => void)[] = [];
+      const notificationsMap: Record<string, Notification[]> = {};
 
-      chatsSnapshot.docs.forEach((chatDoc) => {
+      chatsSnap.docs.forEach((chatDoc) => {
         const messagesRef = collection(db, "chats", chatDoc.id, "messages");
         const unreadMessagesQuery = query(
           messagesRef,
@@ -57,36 +58,25 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
           where("read", "==", false)
         );
 
-        const unsubscribeMessages = onSnapshot(
-          unreadMessagesQuery,
-          (messagesSnap) => {
-            setNotifications((prevNotifications) => {
-              const otherNotifications = prevNotifications.filter(
-                (notif) => notif.chatId !== chatDoc.id
-              );
+        const unsubMessages = onSnapshot(unreadMessagesQuery, (msgSnap) => {
+          notificationsMap[chatDoc.id] = msgSnap.docs.map((doc) => ({
+            ...(doc.data() as Notification),
+          }));
 
-              const chatNotifications = messagesSnap.docs.map((doc) => ({
-                ...(doc.data() as Notification),
-              }));
+          // Aggregate all notifications across chats
+          const allNotifications = Object.values(notificationsMap).flat();
+          setNotifications(allNotifications);
+          setUnreadCount(allNotifications.length);
+        });
 
-              const updatedNotifications = [
-                ...otherNotifications,
-                ...chatNotifications,
-              ];
-              setUnreadCount(updatedNotifications.length);
-
-              return updatedNotifications;
-            });
-          }
-        );
-
-        unsubscribeMsgs.push(unsubscribeMessages);
+        messageUnsubs.push(unsubMessages);
       });
 
-      return () => unsubscribeMsgs.forEach((unsub) => unsub());
+      // Proper cleanup of listeners
+      return () => messageUnsubs.forEach((unsub) => unsub());
     });
 
-    return unsubscribeChats;
+    return unsubChats;
   }, [user]);
 
   return (

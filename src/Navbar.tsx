@@ -17,6 +17,7 @@ const NavBar: React.FC = () => {
   const { unreadCount } = useNotification();
 
   const [vizionaryName, setVizionaryName] = useState<string | null>(null);
+  const [isVizionary, setIsVizionary] = useState<boolean>(false);
   const [showPlaylistPortal, setShowPlaylistPortal] = useState(false);
 
   useEffect(() => {
@@ -25,11 +26,15 @@ const NavBar: React.FC = () => {
     const unsubscribeUser = onSnapshot(doc(db, "users", user.uid), (snap) => {
       if (snap.exists()) {
         setVizionaryName(snap.data().vizionaryName || null);
+        setIsVizionary(snap.data().isVizionary || false);
       }
     });
 
     return unsubscribeUser;
   }, [user]);
+  useEffect(() => {
+    console.log("👀 UNREAD COUNT RIGHT NOW:", unreadCount);
+  }, [unreadCount]);
 
   useEffect(() => {
     console.log("🔥 NavBar unreadCount:", unreadCount);
@@ -66,10 +71,10 @@ const NavBar: React.FC = () => {
               Playlists
             </button>
 
-            {vizionaryName && (
+            {vizionaryName ? (
               <>
                 <Link
-                  to="/vizionaryportal"
+                  to="/vizionary-portal"
                   className="nav-button"
                   style={{ color: contrastColor }}
                 >
@@ -83,7 +88,15 @@ const NavBar: React.FC = () => {
                   Music Upload
                 </Link>
               </>
-            )}
+            ) : isVizionary ? (
+              <Link
+                to="/vizionary-onboarding"
+                className="nav-button"
+                style={{ color: contrastColor }}
+              >
+                Vizionary Onboarding
+              </Link>
+            ) : null}
 
             <div className="chat-link-wrapper" style={{ position: "relative" }}>
               <Link
@@ -103,15 +116,9 @@ const NavBar: React.FC = () => {
                     height: "8px",
                     backgroundColor: "red",
                     borderRadius: "50%",
-                    color: "white",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    fontSize: "10px",
-                    fontWeight: "bold",
                     zIndex: 1000,
                   }}
-                ></div>
+                />
               )}
             </div>
 
