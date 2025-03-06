@@ -26,3 +26,4 @@ firebase.tsx
 functions/src/permissions.json
 
 /credentials/
+serviceAccount.json

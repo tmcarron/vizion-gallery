@@ -2,6 +2,9 @@
 .song-display button {
   color: black !important;
 }
+.song-display {
+  color: black !important;
+}
 .playlist-modal-overlay {
   position: fixed;
   inset: 0;
@@ -38,8 +41,14 @@
   width: 100%;
   padding: 20px;
   box-sizing: border-box;
+  padding-bottom: 100px;
 }
-
+.song-display button {
+  background: none;
+}
+.song-display button:hover {
+  background: none;
+}
 /* 🎨 GROUPED BY VIZIONARY */
 .vizionary-group {
   width: 100%;
@@ -112,7 +121,7 @@
 .song-title {
   font-size: 16px;
   font-weight: 500;
-  color: var(--contrastColor);
+  color: black;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

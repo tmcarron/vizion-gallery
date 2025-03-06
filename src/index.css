@@ -1,10 +1,13 @@
 body {
   width: 100vw;
-  padding: 0 !important;
-  margin: 0 !important;
   font-family: "bookmania", serif;
   font-weight: 400;
   font-style: normal;
+  padding-top: 30px;
+}
+
+.chat-list-container {
+  padding-bottom: 200px;
 }
 * {
   list-style-type: none;
@@ -28,7 +31,7 @@ body {
   color: red !important;
 }
 
-/* Optional: Style for Webkit Browsers (Chrome, Safari) */
+/* Optional : Style for Webkit Browsers (Chrome, Safari) */
 .song-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -70,4 +73,13 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.notification-bubble {
+  width: 8px !important;
+  height: 8px !important;
+  background: red !important;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 6px;
+  z-index: 9999 !important;
 }

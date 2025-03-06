@@ -222,7 +222,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         bottomLeft: true,
         topLeft: true,
       }}
-      style={{ zIndex: 1000 }}
+      style={{
+        position: "fixed" /* ✅ Forces fixed position */,
+        zIndex: 10000 /* Ensures it's above everything */,
+      }}
     >
       <div className="chat-window">
         <div className="chat-header">

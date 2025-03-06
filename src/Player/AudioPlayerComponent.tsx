@@ -22,7 +22,7 @@ const AudioPlayerComponent: React.FC = () => {
   const [contrastColor, setContrastColor] = useState("#fff");
   const [setComplementaryColor] = useState("#ffff");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading] = useState(true);
+  // const [isLoading] = useState(true);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -50,17 +50,19 @@ const AudioPlayerComponent: React.FC = () => {
 
       audioRef.current.oncanplaythrough = async () => {
         console.log("✅ Audio is ready to play");
-        try {
-          await audioRef.current!.play();
-          setIsPlaying(true);
-        } catch (error) {
-          console.error("❌ Error playing audio:", error);
+        if (isPlaying) {
+          // ✅ Only play if isPlaying is true
+          try {
+            await audioRef.current!.play();
+          } catch (error) {
+            console.error("❌ Error playing audio:", error);
+          }
         }
       };
     };
 
     loadAndPlaySong();
-  }, [selectedSong]);
+  }, [selectedSong, isPlaying]); // ✅ Depend on isPlaying
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -185,16 +187,27 @@ const AudioPlayerComponent: React.FC = () => {
   }, [selectedSong, handleNextSong]);
 
   const handlePlayPause = useCallback(() => {
-    if (!audioRef.current || !audioRef.current.src || isLoading) return;
-    if (isPlaying) {
+    if (!audioRef.current || !audioRef.current.src) {
+      console.warn("⚠️ No audio source found.");
+      return;
+    }
+
+    if (audioRef.current.paused) {
+      audioRef.current
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+          console.log("▶️ Playing");
+        })
+        .catch((error) => {
+          console.error("❌ Error playing audio:", error);
+        });
+    } else {
       audioRef.current.pause();
       setIsPlaying(false);
-    } else {
-      audioRef.current.play().catch(console.error);
-      setIsPlaying(true);
+      console.log("⏸️ Paused");
     }
-  }, [isPlaying, isLoading]);
-
+  }, []);
   useEffect(() => {
     if (!selectedSong?.coverArt) return;
     const updateCoverArt = async () => {

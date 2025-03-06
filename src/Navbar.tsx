@@ -45,93 +45,88 @@ const NavBar: React.FC = () => {
   return (
     <>
       <nav className="nav-bar" style={{ backgroundColor: dominantColor }}>
-        <section className="nav-links">
-          <Link to="/" className="nav-button" style={{ color: contrastColor }}>
-            Home
-          </Link>
-
-          {!user ? (
+        <div className="nav-container">
+          {/* SECTION 1: General Navigation */}
+          <section className="nav-section left">
             <Link
-              to="/login"
+              to="/"
               className="nav-button"
               style={{ color: contrastColor }}
             >
-              Login
+              Home
             </Link>
-          ) : (
-            <>
-              <button
-                className="nav-button"
-                style={{ color: contrastColor }}
-                onClick={() => setShowPlaylistPortal(true)}
-              >
-                Playlists
-              </button>
+          </section>
 
-              {vizionaryName ? (
-                <>
-                  <Link
-                    to="/vizionary-portal"
-                    className="nav-button"
-                    style={{ color: contrastColor }}
-                  >
-                    Vizionary Portal
-                  </Link>
-                  <Link
-                    to="/music-upload"
-                    className="nav-button"
-                    style={{ color: contrastColor }}
-                  >
-                    Music Upload
-                  </Link>
-                </>
-              ) : isVizionary ? (
-                <Link
-                  to="/vizionary-onboarding"
-                  className="nav-button"
-                  style={{ color: contrastColor }}
-                >
-                  Vizionary Onboarding
-                </Link>
-              ) : null}
-
-              <div
-                className="chat-link-wrapper"
-                style={{ position: "relative" }}
-              >
-                <Link
-                  to="/chat"
-                  className="nav-button"
-                  style={{ color: contrastColor }}
-                >
-                  Chat
-                </Link>
-                {unreadCount > 0 && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      right: 0,
-                      width: "8px",
-                      height: "8px",
-                      backgroundColor: "red",
-                      borderRadius: "50%",
-                      zIndex: 1000,
-                    }}
-                  />
-                )}
-              </div>
-
-              <button
-                onClick={handleLogout}
+          {/* SECTION 2: User Actions */}
+          <section className="nav-section right">
+            {!user ? (
+              <Link
+                to="/login"
                 className="nav-button"
                 style={{ color: contrastColor }}
               >
-                Logout
-              </button>
-            </>
-          )}
-        </section>
+                Login
+              </Link>
+            ) : (
+              <>
+                <button
+                  className="nav-button"
+                  style={{ color: contrastColor }}
+                  onClick={() => setShowPlaylistPortal(true)}
+                >
+                  Playlists
+                </button>
+
+                {vizionaryName ? (
+                  <>
+                    <Link
+                      to="/vizionary-portal"
+                      className="nav-button"
+                      style={{ color: contrastColor }}
+                    >
+                      Vizionary Portal
+                    </Link>
+                    <Link
+                      to="/music-upload"
+                      className="nav-button"
+                      style={{ color: contrastColor }}
+                    >
+                      Music Upload
+                    </Link>
+                  </>
+                ) : isVizionary ? (
+                  <Link
+                    to="/vizionary-onboarding"
+                    className="nav-button"
+                    style={{ color: contrastColor }}
+                  >
+                    Vizionary Onboarding
+                  </Link>
+                ) : null}
+
+                {/* Chat Link with Notification Bubble */}
+                <div className="chat-link-wrapper">
+                  <Link
+                    to="/chat"
+                    className="nav-button"
+                    style={{ color: contrastColor }}
+                  >
+                    Chat
+                  </Link>
+                  {unreadCount > 0 && <div className="notification-bubble" />}
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="nav-button"
+                  style={{ color: contrastColor }}
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </section>
+        </div>
       </nav>
 
       {showPlaylistPortal && user && (

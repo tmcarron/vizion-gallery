@@ -9,6 +9,8 @@
   justify-content: flex-start;
   background: linear-gradient(to bottom, var(--complementaryColor), #ffffff);
   padding: 60px 20px;
+  padding-top: 100px;
+  padding-bottom: 200px;
   box-sizing: border-box;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -67,7 +69,9 @@ button {
 button:hover {
   background-color: #357ab8;
 }
-
+.vizionary-bio {
+  color: var(--dominantColor);
+}
 .song-editor {
   width: 90%;
   max-width: 600px;
