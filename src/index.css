@@ -5,11 +5,17 @@ body {
   font-style: normal;
   padding-top: 30px;
 }
+:root {
+  --dominantColor: #ffffff;
+  --contrastColor: #000000;
+  --complementaryColor: #ff00ff;
+}
 
 .chat-list-container {
   padding-bottom: 200px;
 }
 * {
+  font-family: "bookmania";
   list-style-type: none;
 }
 .song-list {

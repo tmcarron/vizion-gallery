@@ -1,4 +1,11 @@
-import { createContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+  useRef,
+} from "react";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { db, storage } from "../firebase";
 import { getDownloadURL, ref } from "firebase/storage";
@@ -40,115 +47,139 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
   const [contrastColor, setContrastColor] = useState("#000000");
   const [complementaryColor, setComplementaryColor] = useState("#ff00ff");
 
-  // ✅ Convert Firebase Storage URLs
-  const convertGsUrlToHttps = async (gsUrl?: string): Promise<string> => {
-    if (!gsUrl || !gsUrl.startsWith("gs://"))
-      return gsUrl || "/fallback-cover.jpg";
-    try {
-      const storageRef = ref(
-        storage,
-        gsUrl.replace("gs://vizion-gallery.appspot.com/", "")
-      );
-      return await getDownloadURL(storageRef);
-    } catch (error) {
-      console.error("❌ Error converting gs:// URL:", error);
-      return "/fallback-cover.jpg";
-    }
-  };
+  // Use refs to track initialization state
+  const songsLoadedRef = useRef(false);
+  const initialShuffleRef = useRef(false);
 
-  // ✅ Fetch all songs from Firebase **only once**
-  useEffect(() => {
-    const fetchSongs = async () => {
-      const snapshot = await getDocs(collection(db, "songs"));
-      const songsList: Song[] = snapshot.docs.map((docSnap) => {
-        const songData = docSnap.data();
+  // Convert Firebase Storage URLs
+  const convertGsUrlToHttps = useCallback(
+    async (gsUrl?: string): Promise<string> => {
+      if (!gsUrl || !gsUrl.startsWith("gs://"))
+        return gsUrl || "/fallback-cover.jpg";
+      try {
+        const storageRef = ref(
+          storage,
+          gsUrl.replace("gs://vizion-gallery.appspot.com/", "")
+        );
+        return await getDownloadURL(storageRef);
+      } catch (error) {
+        console.error("❌ Error converting gs:// URL:", error);
+        return "/fallback-cover.jpg";
+      }
+    },
+    []
+  );
 
-        console.log("🔥 Firestore Song Data:", songData);
-        console.log("🔍 Available Keys:", Object.keys(songData));
-
-        return {
-          id: docSnap.id,
-          title: songData.title || "Untitled",
-          albumId:
-            songData.albumId ||
-            songData.AlbumID ||
-            songData.album_id ||
-            undefined,
-          audio: songData.audio || "",
-          coverArt: songData.coverArt || "",
-          vizionaries: songData.vizionaries || [],
-        };
-      });
-
-      console.log("🎧 All Songs Loaded from Firestore:", songsList);
-      setAllSongs(songsList);
-
-      // ✅ Create a shuffled default playlist
-      if (songsList.length > 0) {
-        const shuffledSongs = [...songsList];
-        for (let i = shuffledSongs.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffledSongs[i], shuffledSongs[j]] = [
-            shuffledSongs[j],
-            shuffledSongs[i],
-          ];
+  // Fetch songs for a given playlist
+  const fetchSongsForPlaylist = useCallback(
+    async (songIds: string[]): Promise<Song[]> => {
+      const songs: Song[] = [];
+      for (const songId of songIds) {
+        const songDoc = await getDoc(doc(db, "songs", songId));
+        if (songDoc.exists()) {
+          const data = songDoc.data();
+          songs.push({
+            id: songDoc.id,
+            title: data.title || "Untitled",
+            albumId: data.albumId || undefined,
+            audio: await convertGsUrlToHttps(data.audio),
+            coverArt: await convertGsUrlToHttps(data.coverArt),
+            vizionaries: data.vizionaries || [],
+          });
         }
+      }
+      return songs;
+    },
+    [convertGsUrlToHttps]
+  );
 
-        const defaultPlaylist = {
-          id: "default",
-          name: "All Songs (Shuffled)",
-          createdBy: "System",
-          createdAt: new Date(),
-          songIds: shuffledSongs.map((song) => song.id),
-        };
+  // Set a new armed playlist & update `selectedSong`
+  const setArmedPlaylist = useCallback(
+    async (playlist: Playlist) => {
+      const songs = await fetchSongsForPlaylist(playlist.songIds);
+      setArmedPlaylistState(playlist);
+      if (songs.length > 0) {
+        setSelectedSong(songs[0]);
+      }
+    },
+    [fetchSongsForPlaylist]
+  );
 
-        setArmedPlaylist(defaultPlaylist);
-        console.log("✅ Default Playlist Armed:", defaultPlaylist);
+  // Create shuffled playlist once - separated from the fetch songs effect
+  const createShuffledPlaylist = useCallback((songsList: Song[]) => {
+    if (!initialShuffleRef.current && songsList.length > 0) {
+      initialShuffleRef.current = true;
 
-        // ✅ Start playing the first shuffled song
-        setTimeout(() => {
-          setSelectedSong(shuffledSongs[0]);
-          console.log(
-            "▶️ Playing first shuffled song:",
-            shuffledSongs[0].title
-          );
-        }, 100);
+      // Create a shuffled copy of songs
+      const shuffledSongs = [...songsList];
+      for (let i = shuffledSongs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledSongs[i], shuffledSongs[j]] = [
+          shuffledSongs[j],
+          shuffledSongs[i],
+        ];
+      }
+
+      const defaultPlaylist = {
+        id: "default",
+        name: "All Songs (Shuffled)",
+        createdBy: "System",
+        createdAt: new Date(),
+        songIds: shuffledSongs.map((song) => song.id),
+      };
+
+      setArmedPlaylistState(defaultPlaylist);
+      console.log("✅ Default Playlist Armed:", defaultPlaylist);
+
+      // Set first song
+      setSelectedSong(shuffledSongs[0]);
+      console.log("▶️ Playing first shuffled song:", shuffledSongs[0].title);
+    }
+  }, []);
+
+  // Fetch all songs from Firebase only once
+  useEffect(() => {
+    // Only run this effect if songs haven't been loaded yet
+    if (songsLoadedRef.current) return;
+
+    const fetchSongs = async () => {
+      try {
+        songsLoadedRef.current = true; // Mark as loaded immediately to prevent double loading
+
+        const snapshot = await getDocs(collection(db, "songs"));
+        const songsList: Song[] = snapshot.docs.map((docSnap) => {
+          const songData = docSnap.data();
+          return {
+            id: docSnap.id,
+            title: songData.title || "Untitled",
+            albumId:
+              songData.albumId ||
+              songData.AlbumID ||
+              songData.album_id ||
+              undefined,
+            audio: songData.audio || "",
+            coverArt: songData.coverArt || "",
+            vizionaries: songData.vizionaries || [],
+          };
+        });
+
+        console.log("🎧 All Songs Loaded from Firestore:", songsList);
+        setAllSongs(songsList);
+      } catch (error) {
+        console.error("Error fetching songs:", error);
+        songsLoadedRef.current = false; // Reset on error to allow retry
       }
     };
 
     fetchSongs();
-  }, []);
+  }, []); // Empty dependency array to run only once
 
-  // ✅ Fetch songs for a given playlist
-  const fetchSongsForPlaylist = async (songIds: string[]): Promise<Song[]> => {
-    const songs: Song[] = [];
-    for (const songId of songIds) {
-      const songDoc = await getDoc(doc(db, "songs", songId));
-      if (songDoc.exists()) {
-        const data = songDoc.data();
-        songs.push({
-          id: songDoc.id,
-          title: data.title || "Untitled",
-          albumId: data.albumId || undefined, // ✅ Ensure albumId is included
-          audio: await convertGsUrlToHttps(data.audio),
-          coverArt: await convertGsUrlToHttps(data.coverArt),
-          vizionaries: data.vizionaries || [],
-        });
-      }
-    }
-    return songs;
-  };
+  // Initialize the playlist and selected song after songs are loaded
+  useEffect(() => {
+    createShuffledPlaylist(allSongs);
+  }, [allSongs, createShuffledPlaylist]);
 
-  // ✅ Set a new armed playlist & update `selectedSong`
-  const setArmedPlaylist = async (playlist: Playlist) => {
-    const songs = await fetchSongsForPlaylist(playlist.songIds);
-    setArmedPlaylistState(playlist);
-    if (songs.length > 0) {
-      setSelectedSong(songs[0]); // ✅ Always start playing the first song in the new playlist
-    }
-  };
-
-  // ✅ Update colors when `selectedSong` changes
+  // Update colors when `selectedSong` changes
   useEffect(() => {
     if (!selectedSong?.coverArt) return;
 
@@ -159,9 +190,25 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
         if (!isCancelled) {
           const { base, contrast, complementary } =
             await getBaseContrastAndComplementaryColor(coverArtUrl);
-          setDominantColor(base || "#ffffff");
-          setContrastColor(contrast || "#000000");
-          setComplementaryColor(complementary || "#ff00ff");
+
+          if (base && base !== dominantColor) setDominantColor(base);
+          if (contrast && contrast !== contrastColor)
+            setContrastColor(contrast);
+          if (complementary && complementary !== complementaryColor)
+            setComplementaryColor(complementary);
+
+          // 🔹 Add a small delay before re-rendering to prevent layout shift
+          setTimeout(() => {
+            document.documentElement.style.setProperty("--dominantColor", base);
+            document.documentElement.style.setProperty(
+              "--contrastColor",
+              contrast
+            );
+            document.documentElement.style.setProperty(
+              "--complementaryColor",
+              complementary
+            );
+          }, 50);
         }
       } catch (error) {
         console.error("❌ Error fetching colors:", error);
@@ -174,7 +221,7 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [selectedSong]);
 
-  // ✅ Update global CSS variables for colors
+  // Update global CSS variables for colors
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--dominantColor",
@@ -199,7 +246,7 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
         dominantColor,
         contrastColor,
         complementaryColor,
-        setSelectedSong: setSelectedSong,
+        setSelectedSong,
         setAllSongs,
         setArmedPlaylist,
       }}

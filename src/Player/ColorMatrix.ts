@@ -124,117 +124,46 @@ export const getDominantColorFromImage = async (
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = "Anonymous"; // Ensure proper CORS handling
+    img.crossOrigin = "Anonymous";
     img.src = imageUrl;
 
     img.onload = () => {
-      // Downscale image to 100x100 for speed
-      const downscaleWidth = 100;
-      const downscaleHeight = 100;
+      const downscaleSize = 100;
       const canvas = document.createElement("canvas");
-      canvas.width = downscaleWidth;
-      canvas.height = downscaleHeight;
+      canvas.width = downscaleSize;
+      canvas.height = downscaleSize;
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject("Unable to get canvas context");
 
-      ctx.drawImage(img, 0, 0, downscaleWidth, downscaleHeight);
-      const { data } = ctx.getImageData(0, 0, downscaleWidth, downscaleHeight);
+      ctx.drawImage(img, 0, 0, downscaleSize, downscaleSize);
+      const { data } = ctx.getImageData(0, 0, downscaleSize, downscaleSize);
 
-      // Collect valid pixels: ignore nearly transparent and near-white pixels
       const pixels: [number, number, number][] = [];
       for (let i = 0; i < data.length; i += 4) {
-        const alpha = data[i + 3];
-        if (alpha < 128) continue;
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        if (r > 250 && g > 250 && b > 250) continue;
-        pixels.push([r, g, b]);
+        if (data[i + 3] < 128) continue; // Ignore transparent pixels
+        pixels.push([data[i], data[i + 1], data[i + 2]]);
       }
-
       if (pixels.length === 0) return reject("No valid pixels found");
 
-      // K-means clustering parameters
-      const k = 3; // Number of clusters
-      const maxIterations = 10;
+      // Average color instead of picking just one cluster
+      let sumR = 0,
+        sumG = 0,
+        sumB = 0;
+      pixels.forEach(([r, g, b]) => {
+        sumR += r;
+        sumG += g;
+        sumB += b;
+      });
 
-      // Initialize centroids randomly from pixels
-      let centroids: [number, number, number][] = [];
-      for (let i = 0; i < k; i++) {
-        centroids.push(pixels[Math.floor(Math.random() * pixels.length)]);
-      }
+      const avgR = Math.round(sumR / pixels.length);
+      const avgG = Math.round(sumG / pixels.length);
+      const avgB = Math.round(sumB / pixels.length);
 
-      let clusters: number[][] = [];
-      for (let iter = 0; iter < maxIterations; iter++) {
-        // Reset clusters
-        clusters = Array.from({ length: k }, () => []);
-        // Assign each pixel to the nearest centroid
-        pixels.forEach((pixel, idx) => {
-          let minDist = Infinity;
-          let bestCluster = 0;
-          centroids.forEach((centroid, clusterIdx) => {
-            const dist = Math.sqrt(
-              Math.pow(pixel[0] - centroid[0], 2) +
-                Math.pow(pixel[1] - centroid[1], 2) +
-                Math.pow(pixel[2] - centroid[2], 2)
-            );
-            if (dist < minDist) {
-              minDist = dist;
-              bestCluster = clusterIdx;
-            }
-          });
-          clusters[bestCluster].push(idx);
-        });
-
-        // Update centroids based on the clusters
-        let converged = true;
-        for (let clusterIdx = 0; clusterIdx < k; clusterIdx++) {
-          const cluster = clusters[clusterIdx];
-          if (cluster.length === 0) continue; // Avoid empty cluster
-
-          let sumR = 0,
-            sumG = 0,
-            sumB = 0;
-          cluster.forEach((idx) => {
-            const [r, g, b] = pixels[idx];
-            sumR += r;
-            sumG += g;
-            sumB += b;
-          });
-          const newCentroid: [number, number, number] = [
-            sumR / cluster.length,
-            sumG / cluster.length,
-            sumB / cluster.length,
-          ];
-          // Check if the centroid moved significantly
-          if (
-            Math.abs(newCentroid[0] - centroids[clusterIdx][0]) > 1 ||
-            Math.abs(newCentroid[1] - centroids[clusterIdx][1]) > 1 ||
-            Math.abs(newCentroid[2] - centroids[clusterIdx][2]) > 1
-          ) {
-            converged = false;
-          }
-          centroids[clusterIdx] = newCentroid;
-        }
-        if (converged) break;
-      }
-
-      // Select the largest cluster as the dominant color
-      let dominantClusterIndex = 0;
-      let maxClusterSize = 0;
-      for (let i = 0; i < k; i++) {
-        if (clusters[i].length > maxClusterSize) {
-          maxClusterSize = clusters[i].length;
-          dominantClusterIndex = i;
-        }
-      }
-
-      const [rDominant, gDominant, bDominant] = centroids[dominantClusterIndex];
       const hexColor =
         "#" +
-        Math.round(rDominant).toString(16).padStart(2, "0") +
-        Math.round(gDominant).toString(16).padStart(2, "0") +
-        Math.round(bDominant).toString(16).padStart(2, "0");
+        avgR.toString(16).padStart(2, "0") +
+        avgG.toString(16).padStart(2, "0") +
+        avgB.toString(16).padStart(2, "0");
 
       resolve(hexColor);
     };

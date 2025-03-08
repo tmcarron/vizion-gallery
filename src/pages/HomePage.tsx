@@ -1,46 +1,22 @@
-import React, { useContext, useState, useEffect, useMemo } from "react";
+import React, { useContext, useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { MusicContext } from "../Player/MusicContext";
 import SongDisplay from "../SongDisplay";
+import { Playlist } from "../models/Playlist";
 import "./HomePage.css";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
-import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
 const HomePage: React.FC = () => {
-  const { allSongs } = useContext(MusicContext);
-  const [songsByVizionary, setSongsByVizionary] = useState<{
-    [vizionary: string]: any[];
-  }>({});
+  const { allSongs, setArmedPlaylist, setSelectedSong } =
+    useContext(MusicContext);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredVizionaries, setFilteredVizionaries] = useState<string[]>([]);
-  const [vizionaries, setVizionaries] = useState<string[]>([]);
-  const [filteredSongs, setFilteredSongs] = useState<any[]>([]); // ✅ Stores filtered songs
+  const [shuffledVizionaries, setShuffledVizionaries] = useState<string[]>([]);
+  const shuffleCompletedRef = useRef(false);
 
-  const storage = getStorage();
-
-  // ✅ Fetch all Vizionaries from Firestore
-  useEffect(() => {
-    const fetchVizionaries = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, "vizionaries"));
-        const vizNames = snapshot.docs.map((doc) => doc.data().vizionaryName);
-        console.log("📜 Retrieved Vizionaries from Firestore:", vizNames);
-        setVizionaries(vizNames);
-      } catch (error) {
-        console.error("❌ Error fetching vizionaries:", error);
-      }
-    };
-
-    fetchVizionaries();
-  }, []);
-
-  // ✅ Group songs by Vizionary
-  useEffect(() => {
-    if (allSongs.length === 0) return;
+  // Group songs by Vizionary
+  const songsByVizionary = useMemo(() => {
+    if (allSongs.length === 0) return {};
 
     const groupedSongs: { [vizionary: string]: any[] } = {};
-
     allSongs.forEach((song) => {
       song.vizionaries.forEach((vizionary: string) => {
         if (!groupedSongs[vizionary]) {
@@ -50,72 +26,88 @@ const HomePage: React.FC = () => {
       });
     });
 
-    console.log("✅ Grouped Songs by Vizionary:", groupedSongs);
-    setSongsByVizionary(groupedSongs);
+    return groupedSongs;
   }, [allSongs]);
 
-  // ✅ Shuffle Vizionaries only once per page load
-  const shuffledVizionaries = useMemo(() => {
-    if (Object.keys(songsByVizionary).length === 0) return [];
-
+  // Shuffle only once when songsByVizionary changes and has content
+  useEffect(() => {
     const vizionaryNames = Object.keys(songsByVizionary);
-    const shuffled = [...vizionaryNames];
+    if (vizionaryNames.length === 0 || shuffleCompletedRef.current) return;
 
+    shuffleCompletedRef.current = true;
+
+    const shuffled = [...vizionaryNames];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    console.log("🔀 Shuffled Vizionaries:", shuffled);
-    return shuffled;
-  }, [Object.keys(songsByVizionary).length]);
+    setShuffledVizionaries(shuffled);
+  }, [songsByVizionary]);
 
-  // ✅ Filter Songs and Convert `gs://` URLs
-  useEffect(() => {
-    if (!searchQuery) {
-      setFilteredSongs([]);
-      return;
+  // Filter songs and Vizionaries based on search query
+  const filteredResults = useMemo(() => {
+    if (!searchQuery) return { songs: [], vizionaries: [] };
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+
+    const songs = allSongs.filter((song) =>
+      song.title.toLowerCase().includes(lowerCaseQuery)
+    );
+
+    const vizionaries = Object.keys(songsByVizionary).filter((vizionary) =>
+      vizionary.toLowerCase().includes(lowerCaseQuery)
+    );
+
+    return { songs, vizionaries };
+  }, [searchQuery, allSongs, songsByVizionary]);
+
+  // Play All Songs Function
+  const handlePlayAll = () => {
+    if (allSongs.length === 0) return;
+
+    // Shuffle songs
+    const shuffledSongs = [...allSongs];
+    for (let i = shuffledSongs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledSongs[i], shuffledSongs[j]] = [
+        shuffledSongs[j],
+        shuffledSongs[i],
+      ];
     }
 
-    const fetchSongs = async () => {
-      const filtered = allSongs.filter((song) =>
-        song.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-
-      const updatedSongs = await Promise.all(
-        filtered.map(async (song) => {
-          if (song.coverArt.startsWith("gs://")) {
-            const storageRef = ref(storage, song.coverArt);
-            song.coverArt = await getDownloadURL(storageRef);
-          }
-          return song;
-        })
-      );
-
-      setFilteredSongs(updatedSongs);
+    // Create a playlist
+    const playAllPlaylist: Playlist = {
+      id: "play-all",
+      name: "All Songs",
+      createdBy: "System",
+      createdAt: new Date(),
+      songIds: shuffledSongs.map((song) => song.id),
     };
 
-    fetchSongs();
-  }, [searchQuery, allSongs]);
+    setArmedPlaylist(playAllPlaylist);
+    setSelectedSong(shuffledSongs[0]); // Start playing first song
+  };
 
-  // ✅ Filter Vizionaries based on search query
-  useEffect(() => {
-    if (!searchQuery) {
-      setFilteredVizionaries([]);
-      return;
-    }
-    setFilteredVizionaries(
-      vizionaries.filter((vizionary) =>
-        (vizionary || "").toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  if (allSongs.length === 0) {
+    return (
+      <div className="HomePage">
+        <h1>Vizion Gallery</h1>
+        <p>Loading Vizionaries...</p>
+      </div>
     );
-  }, [searchQuery, vizionaries]);
+  }
 
   return (
     <div className="HomePage">
       <h1>Vizion Gallery</h1>
 
-      {/* ✅ Search Bar */}
+      {/* Play All Button */}
+      <button className="play-all-button" onClick={handlePlayAll}>
+        ▶ Play All
+      </button>
+
+      {/* Search Bar */}
       <input
         type="text"
         className="search-bar"
@@ -124,40 +116,43 @@ const HomePage: React.FC = () => {
         onChange={(e) => setSearchQuery(e.target.value)}
       />
 
-      {/* ✅ Display Search Results Using `SongDisplay` */}
+      {/* Search Results */}
       {searchQuery && (
         <section className="search-results">
           <h2>Search Results</h2>
+          {filteredResults.songs.length > 0 ||
+          filteredResults.vizionaries.length > 0 ? (
+            <>
+              {filteredResults.vizionaries.length > 0 && (
+                <div className="vizionary-results">
+                  <h3>Vizionaries</h3>
+                  {filteredResults.vizionaries.map((vizionary) => (
+                    <p key={vizionary}>
+                      <Link
+                        to={`/vizionary/${vizionary}`}
+                        className="vizionary-link"
+                      >
+                        {vizionary}
+                      </Link>
+                    </p>
+                  ))}
+                </div>
+              )}
 
-          {/* ✅ Display Found Vizionaries */}
-          {filteredVizionaries.length > 0 && (
-            <div className="search-vizionaries">
-              <h3>Vizionaries</h3>
-              <ul>
-                {filteredVizionaries.map((vizionary) => (
-                  <li key={vizionary}>
-                    <Link
-                      to={`/vizionary/${vizionary}`}
-                      className="search-vizionary-link"
-                    >
-                      {vizionary}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* ✅ Display Found Songs */}
-          {filteredSongs.length > 0 ? (
-            <SongDisplay filteredSongs={filteredSongs} />
+              {filteredResults.songs.length > 0 && (
+                <div className="song-results">
+                  <h3>Songs</h3>
+                  <SongDisplay filteredSongs={filteredResults.songs} />
+                </div>
+              )}
+            </>
           ) : (
-            <p>No songs found.</p>
+            <p>No results found.</p>
           )}
         </section>
       )}
 
-      {/* ✅ Loop through shuffled Vizionaries and display their songs */}
+      {/* Display Songs by Vizionary */}
       {shuffledVizionaries.length > 0 ? (
         shuffledVizionaries.map((vizionary) => (
           <section key={vizionary} className="vizionary-section">
@@ -170,7 +165,7 @@ const HomePage: React.FC = () => {
           </section>
         ))
       ) : (
-        <p>Loading Vizionaries...</p>
+        <p>No Vizionaries Found</p>
       )}
 
       <section className="summary-section">

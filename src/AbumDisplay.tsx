@@ -17,39 +17,46 @@ const AlbumDisplay: React.FC<AlbumDisplayProps> = ({ albums = [] }) => {
   // ✅ Play the full album and arm it as a playlist
   const handlePlayAlbum = (album: Album) => {
     console.log("📀 Album clicked:", album.title, "ID:", album.id);
-    console.log("🎵 Checking allSongs for matching albumId...");
 
+    if (!album.songIds || album.songIds.length === 0) {
+      console.warn(`⚠️ No song IDs found for album: ${album.title}`);
+      return;
+    }
+
+    console.log("🔍 Album contains song IDs in this order:", album.songIds);
+
+    console.log("🎵 Checking all available songs...");
     allSongs.forEach((song) => {
-      console.log(`🎵 Song: ${song.title}, Album ID: ${song.albumId}`);
+      console.log(`🎵 Song: ${song.title}, ID: ${song.id}`);
     });
 
-    // ✅ Ensure `albumId` comparison is type-safe
-    const albumSongs: Song[] = allSongs.filter(
-      (song) => String(song.albumId).trim() === String(album.id).trim()
-    );
+    // ✅ Ensure albumSongs appear in the correct order using `map()`
+    const albumSongs: Song[] = album.songIds
+      .map((id) => allSongs.find((song) => song.id === id.toString()))
+      .filter((song): song is Song => Boolean(song)); // Remove undefined entries
 
-    console.log("✅ Filtered album songs:", albumSongs);
+    console.log("✅ Ordered album songs:", albumSongs);
 
-    if (albumSongs.length > 0) {
-      console.log("✅ Found album songs:", albumSongs);
-
-      setArmedPlaylist({
-        id: album.id,
-        name: album.title,
-        createdBy: album.vizionaries?.join(", ") || "Unknown",
-        createdAt: new Date(),
-        songIds: albumSongs.map((song) => song.id),
-      });
-
-      setTimeout(() => {
-        setSelectedSong(albumSongs[0]);
-        console.log("▶️ Playing first song:", albumSongs[0].title);
-      }, 100);
-    } else {
-      console.warn("⚠️ No songs found in album:", album.title);
+    if (albumSongs.length === 0) {
+      console.warn(`⚠️ No matching songs found for album: ${album.title}`);
+      return;
     }
-  };
 
+    // ✅ Arm the playlist
+    setArmedPlaylist({
+      id: album.id,
+      name: album.title,
+      createdBy: album.vizionaries?.join(", ") || "Unknown",
+      createdAt: new Date(),
+      songIds: albumSongs.map((song) => song.id),
+    });
+
+    // ✅ Delay selecting the first song to ensure state updates
+    setTimeout(() => {
+      console.log("▶️ Playing first song:", albumSongs[0].title);
+      setSelectedSong(albumSongs[0]);
+    }, 200);
+  };
   // ✅ Toggle album expansion
   const toggleAlbumExpansion = (albumId: string) => {
     setExpandedAlbum(expandedAlbum === albumId ? null : albumId);

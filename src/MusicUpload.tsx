@@ -7,6 +7,8 @@ import {
   serverTimestamp,
   onSnapshot,
   doc,
+  updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import { useAuth } from "./AuthContext";
 import "./MusicUpload.css";
@@ -25,7 +27,9 @@ const MusicUpload: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [vizionaryName, setVizionaryName] = useState<string>("");
 
-  // ✅ Fetch Vizionary Name on component mount
+  // Helper function to add debug messages
+
+  // Fetch Vizionary Name on component mount
   useEffect(() => {
     if (!user) return;
 
@@ -77,8 +81,13 @@ const MusicUpload: React.FC = () => {
         },
         reject,
         async () => {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve(url);
+          try {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            resolve(url);
+          } catch (error) {
+            console.error("Error getting download URL:", error);
+            reject(error);
+          }
         }
       );
     });
@@ -89,9 +98,29 @@ const MusicUpload: React.FC = () => {
       setError("You must be logged in.");
       return;
     }
-    if (!coverArt || songs.some((s) => !s.title || !s.audio)) {
-      setError("All fields are required.");
+
+    // Album title required check
+    if (numSongs > 1 && !albumTitle.trim()) {
+      setError("Album title is required for multiple songs.");
       return;
+    }
+
+    // Validation check with detailed error
+    if (!coverArt) {
+      setError("Cover art is required.");
+      return;
+    }
+
+    // Check each song individually
+    for (let i = 0; i < songs.length; i++) {
+      if (!songs[i].title.trim()) {
+        setError(`Song ${i + 1} is missing a title.`);
+        return;
+      }
+      if (!songs[i].audio) {
+        setError(`Song ${i + 1} is missing an audio file.`);
+        return;
+      }
     }
 
     setUploading(true);
@@ -100,41 +129,80 @@ const MusicUpload: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      // ✅ Upload cover art
-      const coverArtURL = await uploadFileWithProgress(
-        coverArt,
-        `coverArt/${user.uid}/${coverArt.name}`
-      );
+      // Upload cover art
 
-      // ✅ Create album if necessary
+      // Create album if necessary
       let albumId: string | null = null;
+      let songIds: string[] = [];
+
       if (numSongs > 1) {
-        const albumDoc = await addDoc(collection(db, "albums"), {
-          title: albumTitle,
-          coverArt: coverArtURL,
-          vizionaries: [vizionaryName],
-          createdAt: serverTimestamp(),
-        });
-        albumId = albumDoc.id;
+        try {
+          const albumDoc = await addDoc(collection(db, "albums"), {
+            title: albumTitle,
+            coverArt: coverArt,
+            vizionaries: [vizionaryName],
+            createdAt: serverTimestamp(),
+            uploader: user.uid,
+            songIds: [], // Initialize with empty array
+          });
+          albumId = albumDoc.id;
+
+          // Verify album was created correctly
+          const albumCheck = await getDoc(doc(db, "albums", albumId));
+
+          if (albumCheck.exists()) {
+          }
+        } catch (albumError) {}
       }
 
-      // ✅ Upload each song
+      // Upload each song
       for (let i = 0; i < songs.length; i++) {
         const song = songs[i];
-        const audioURL = await uploadFileWithProgress(
-          song.audio!,
-          `songs/${user.uid}/${song.audio!.name}`
-        );
 
-        await addDoc(collection(db, "songs"), {
-          title: song.title,
-          audio: audioURL,
-          coverArt: coverArtURL,
-          order: i + 1,
-          albumId: albumId,
-          vizionaries: [vizionaryName], // ✅ Correct vizionaryName used here
-          createdAt: serverTimestamp(),
-        });
+        try {
+          const audioURL = await uploadFileWithProgress(
+            song.audio!,
+            `songs/${user.uid}/${Date.now()}_${song.audio!.name}`
+          );
+
+          // Add song document to Firestore
+          const songDoc = await addDoc(collection(db, "songs"), {
+            title: song.title,
+            audio: audioURL,
+            coverArt: coverArt,
+            order: i + 1,
+            albumId: albumId, // Associate with album if part of one
+            vizionaries: [vizionaryName],
+            uploader: user.uid,
+            createdAt: serverTimestamp(),
+          });
+
+          // Store song ID for album update
+          songIds.push(songDoc.id);
+        } catch (songError) {}
+      }
+
+      // Update the album with song IDs
+      if (albumId && songIds.length > 0) {
+        try {
+          const albumRef = doc(db, "albums", albumId);
+          await updateDoc(albumRef, {
+            songIds: songIds,
+          });
+
+          // Verify the update was successful
+          const updatedAlbum = await getDoc(albumRef);
+          if (updatedAlbum.exists()) {
+            const albumData = updatedAlbum.data();
+
+            if (albumData.songIds && albumData.songIds.length > 0) {
+            } else {
+            }
+          } else {
+          }
+        } catch (updateError) {
+          throw updateError;
+        }
       }
 
       setSuccess("Music uploaded successfully!");
@@ -164,8 +232,12 @@ const MusicUpload: React.FC = () => {
       <input
         type="file"
         accept="image/*"
-        onChange={(e) => setCoverArt(e.target.files?.[0] || null)}
+        onChange={(e) => {
+          const file = e.target.files?.[0] || null;
+          setCoverArt(file);
+        }}
       />
+      {coverArt && <p className="file-selected">Selected: {coverArt.name}</p>}
 
       <label>Number of Songs:</label>
       <input
@@ -182,26 +254,33 @@ const MusicUpload: React.FC = () => {
             type="text"
             value={albumTitle}
             onChange={(e) => setAlbumTitle(e.target.value)}
+            placeholder="Required for multiple songs"
           />
         </>
       )}
 
       {songs.map((song, index) => (
-        <div key={index}>
-          <label>Song {index + 1} Title:</label>
+        <div key={index} className="song-entry">
+          <h3>Song {index + 1}</h3>
+          <label>Title:</label>
           <input
             type="text"
             value={song.title}
             onChange={(e) => handleSongChange(index, "title", e.target.value)}
+            placeholder="Enter song title"
           />
           <label>Audio File:</label>
           <input
             type="file"
-            accept="audio/*"
-            onChange={(e) =>
-              handleSongChange(index, "audio", e.target.files?.[0] || null)
-            }
+            accept=".mp3, .wav, .flac, .aac, .m4a, .ogg"
+            onChange={(e) => {
+              const file = e.target.files?.[0] || null;
+              handleSongChange(index, "audio", file);
+            }}
           />
+          {song.audio && (
+            <p className="file-selected">Selected: {song.audio.name}</p>
+          )}
         </div>
       ))}
 
