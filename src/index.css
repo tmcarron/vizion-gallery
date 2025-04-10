@@ -50,7 +50,13 @@ body {
 .song-list::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
-
+.add-to-playlist-button {
+  margin-top: 0;
+}
+.play-button {
+  margin-top: 0;
+  transform: translateY(0);
+}
 .song-item {
   background: white;
   border-radius: 8px;

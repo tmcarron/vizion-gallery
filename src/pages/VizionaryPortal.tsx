@@ -2,8 +2,19 @@ import { useState, useEffect, useCallback } from "react";
 import { db, storage } from "../firebase";
 import { useAuth } from "../AuthContext";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import "./VizionaryPortal.css";
+import SongDisplay from "../SongDisplay";
+import Album from "../models/Album";
+import AlbumDisplay from "../AbumDisplay";
 
 const VizionaryPortal = () => {
   const { user } = useAuth();
@@ -11,8 +22,10 @@ const VizionaryPortal = () => {
   const [profilePic, setProfilePic] = useState("");
   const [bio, setBio] = useState("");
   const [vizionaryId, setVizionaryId] = useState("");
-  const [showSongEditor, setShowSongEditor] = useState(false);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [albumSongIds, setAlbumSongIds] = useState<Set<string>>(new Set()); // ✅ Fixed state initialization
 
+  console.log(albumSongIds);
   const fetchUserData = useCallback(async () => {
     if (!user) return;
 
@@ -30,6 +43,41 @@ const VizionaryPortal = () => {
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
+
+  // ✅ Fetch albums for the logged-in Vizionary
+  const fetchAlbums = useCallback(async () => {
+    if (!vizionaryId) return;
+
+    try {
+      const albumQuery = query(
+        collection(db, "albums"),
+        where("vizionaries", "array-contains", vizionaryId)
+      );
+      const albumSnapshots = await getDocs(albumQuery);
+      const albumList = albumSnapshots.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Album[];
+
+      setAlbums(albumList);
+
+      // ✅ Collect song IDs from albums
+      const songIdsSet = new Set<string>();
+      albumList.forEach((album) => {
+        album.songIds?.forEach((songId) => songIdsSet.add(songId));
+      });
+
+      setAlbumSongIds(songIdsSet);
+    } catch (error) {
+      console.error("Error fetching albums:", error);
+    }
+  }, [vizionaryId]);
+
+  useEffect(() => {
+    if (vizionaryId) {
+      fetchAlbums();
+    }
+  }, [vizionaryId, fetchAlbums]);
 
   const handleProfilePicChange = async (file: File) => {
     if (!user || !vizionaryId) return;
@@ -81,20 +129,15 @@ const VizionaryPortal = () => {
         <button onClick={handleBioSubmit}>Submit Bio</button>
       </div>
 
-      <button onClick={() => setShowSongEditor((prev) => !prev)}>
-        Edit Songs
-      </button>
-
-      {showSongEditor && (
-        <div className="song-editor">
-          <input
-            type="text"
-            placeholder="Search songs..."
-            className="search-bar"
-          />
-          {/* Additional song editing functionality here */}
-        </div>
+      {/* ✅ Display Albums */}
+      {albums.length > 0 ? (
+        <AlbumDisplay albums={albums} />
+      ) : (
+        <p>No albums available.</p>
       )}
+
+      {/* ✅ Display Songs but exclude ones already in albums */}
+      <SongDisplay vizionaryId={vizionaryId} />
     </div>
   );
 };

@@ -6,6 +6,8 @@ import {
   onSnapshot,
   getDocs,
   orderBy,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { useAuth } from "./AuthContext";
@@ -188,8 +190,37 @@ const UserList: React.FC = () => {
   }, [user]);
 
   // ✅ Open Chat & Reset Unread Count
-  const handleUserClick = (u: User) => {
-    setSelectedUser(u);
+  const handleUserClick = async (u: User) => {
+    setSelectedUser(null); // Temporarily reset chat
+    setTimeout(() => {
+      setSelectedUser(u); // Reopen chat
+    }, 0);
+
+    // ✅ Mark messages as read in Firestore
+    const chatsRef = collection(db, "chats");
+    const chatQuery = query(
+      chatsRef,
+      where("participants", "array-contains", user?.uid)
+    );
+
+    const chatSnapshot = await getDocs(chatQuery);
+    chatSnapshot.docs.forEach(async (chatDoc) => {
+      const messagesRef = collection(db, "chats", chatDoc.id, "messages");
+      const unreadMessagesQuery = query(
+        messagesRef,
+        where("to", "==", user?.uid),
+        where("read", "==", false)
+      );
+
+      const unreadMessagesSnapshot = await getDocs(unreadMessagesQuery);
+      unreadMessagesSnapshot.forEach(async (msgDoc) => {
+        await updateDoc(doc(db, "chats", chatDoc.id, "messages", msgDoc.id), {
+          read: true,
+        });
+      });
+    });
+
+    // ✅ Clear unread count in UI
     setUnreadCounts((prev) => ({
       ...prev,
       [u.id]: 0,
@@ -264,7 +295,7 @@ const UserList: React.FC = () => {
       {/* 📌 Inactive Users */}
       {filteredInactiveUsers.length > 0 && (
         <>
-          <h3>Inactive Users</h3>
+          <h3>Other Users</h3>
           <ul className="user-list">
             {filteredInactiveUsers.map((u) => (
               <li

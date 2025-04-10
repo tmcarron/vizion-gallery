@@ -88,7 +88,7 @@ const AlbumDisplay: React.FC<AlbumDisplayProps> = ({ albums = [] }) => {
                   handlePlayAlbum(album);
                 }}
               >
-                ▶ Play Album
+                Play Album
               </button>
 
               {/* Expand Songs Button */}

@@ -104,7 +104,7 @@ const HomePage: React.FC = () => {
 
       {/* Play All Button */}
       <button className="play-all-button" onClick={handlePlayAll}>
-        ▶ Play All
+        Play All
       </button>
 
       {/* Search Bar */}

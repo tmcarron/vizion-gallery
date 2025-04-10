@@ -20,6 +20,7 @@ import MusicUpload from "./MusicUpload";
 import PlaylistPortal from "./pages/PlaylistPortal";
 import ChatWindow from "./ChatWindow"; // ✅ Import Chat Window
 import VizionaryOnboarding from "./pages/VizionaryOnboarding";
+import Events from "./pages/Events";
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
@@ -39,6 +40,7 @@ const AppContent: React.FC = () => {
       <DataFetching />
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/events" element={<Events />} />
         <Route path="/vizionary-onboarding" element={<VizionaryOnboarding />} />
         <Route path="/vizionary-portal" element={<VizionaryPortal />} />
         <Route path="/login" element={<Login />} />

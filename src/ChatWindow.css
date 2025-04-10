@@ -1,15 +1,15 @@
 .chat-window {
   position: fixed;
-  bottom: 10px;
+  top: 125px;
   right: 20px;
-  width: 300px;
+  width: 320px;
+  height: 400px;
   background: white;
   border: 1px solid #ccc;
   border-radius: 8px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  z-index: 11;
-  position: fixed !important;
+  z-index: 10000; /* Ensures it is always above other elements */
 }
 .react-draggable .react-draggable:dragged {
   position: fixed;

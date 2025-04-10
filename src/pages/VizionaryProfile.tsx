@@ -20,8 +20,10 @@ const VizionaryProfile: React.FC = () => {
   const [profilePic, setProfilePic] = useState<string>("");
   const [bio, setBio] = useState<string>("");
   const [albums, setAlbums] = useState<Album[]>([]);
+  const [albumSongIds, setAlbumSongIds] = useState<Set<string>>(new Set()); // Store song IDs in albums
   const [loading, setLoading] = useState<boolean>(true);
 
+  console.log(albumSongIds);
   useEffect(() => {
     if (!id) {
       console.error("No Vizionary ID provided.");
@@ -62,7 +64,6 @@ const VizionaryProfile: React.FC = () => {
     fetchVizionaryData();
   }, [id]);
 
-  // ✅ Move fetchAlbums outside of useEffect so it can be called properly
   const fetchAlbums = async (name: string) => {
     if (!name) {
       console.warn("⚠️ Skipping album fetch: vizionaryName is null");
@@ -74,7 +75,7 @@ const VizionaryProfile: React.FC = () => {
 
       const albumsQuery = query(
         collection(db, "albums"),
-        where("vizionaries", "array-contains", name) // ✅ Matches if vizionaryName is in the array
+        where("vizionaries", "array-contains", name)
       );
       const albumSnapshots = await getDocs(albumsQuery);
 
@@ -88,28 +89,31 @@ const VizionaryProfile: React.FC = () => {
       });
 
       setAlbums(albumsList);
+
+      // ✅ Collect all song IDs from albums
+      const songIdsSet = new Set<string>();
+      albumsList.forEach((album) => {
+        album.songIds?.forEach((songId) => songIdsSet.add(songId));
+      });
+
+      console.log("🎵 Songs in Albums:", songIdsSet);
+      setAlbumSongIds(songIdsSet);
     } catch (error) {
       console.error("❌ Error fetching albums:", error);
     }
   };
-  // ✅ Now fetchAlbums is properly called after vizionaryName is set
+
   useEffect(() => {
     if (vizionaryName) {
       fetchAlbums(vizionaryName);
     }
   }, [vizionaryName]);
 
-  // const handleAlbumSelect = (album: Album) => {
-  //   console.log("Selected Album:", album);
-  //   // You can expand this to show album details or filter songs
-  // };
-
   if (loading) return <p>Loading...</p>;
 
   return (
     <div className="vizionary-profile">
       <div className="vizionary-header">
-        {/* ✅ Only render the image if there's a profile picture */}
         {profilePic && profilePic !== "/default-profile.png" && (
           <img src={profilePic} alt="Profile" className="profile-pic" />
         )}
@@ -118,20 +122,19 @@ const VizionaryProfile: React.FC = () => {
           {vizionaryName || "Unknown Vizionary"}
         </h1>
 
-        {/* ✅ Only render bio if it’s not empty */}
         {bio && bio !== "This vizionary has not written a bio yet." && (
           <p className="vizionary-bio">{bio}</p>
         )}
       </div>
 
-      {/* Display Albums Using AlbumDisplay Component */}
+      {/* Display Albums */}
       {albums.length > 0 ? (
         <AlbumDisplay albums={albums} />
       ) : (
         <p>No albums available for this Vizionary.</p>
       )}
 
-      {/* Display Songs */}
+      {/* Display Songs (Filtered to exclude album songs) */}
       <SongDisplay vizionaryId={id!} />
     </div>
   );

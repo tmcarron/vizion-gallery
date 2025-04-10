@@ -33,13 +33,19 @@ const NavBar: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log("🔥 NavBar unreadCount:", unreadCount);
+    console.log("NavBar unreadCount:", unreadCount);
   }, [unreadCount]);
 
   const handleLogout = async () => {
     await signOut(getAuth());
     navigate("/");
     console.log("Logged out successfully.");
+  };
+
+  const handleOpenPlaylistPortal = () => {
+    if (!showPlaylistPortal) {
+      setShowPlaylistPortal(true);
+    }
   };
 
   return (
@@ -54,6 +60,13 @@ const NavBar: React.FC = () => {
               style={{ color: contrastColor }}
             >
               Home
+            </Link>
+            <Link
+              to="/events"
+              className="nav-button"
+              style={{ color: contrastColor }}
+            >
+              Events
             </Link>
           </section>
 
@@ -72,7 +85,7 @@ const NavBar: React.FC = () => {
                 <button
                   className="nav-button"
                   style={{ color: contrastColor }}
-                  onClick={() => setShowPlaylistPortal(true)}
+                  onClick={handleOpenPlaylistPortal}
                 >
                   Playlists
                 </button>
@@ -129,6 +142,7 @@ const NavBar: React.FC = () => {
         </div>
       </nav>
 
+      {/* Playlist Portal (Ensures only one instance is open) */}
       {showPlaylistPortal && user && (
         <PlaylistPortal
           currentUserId={user.uid}

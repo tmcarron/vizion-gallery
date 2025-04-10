@@ -1,0 +1,47 @@
+.Events {
+  position: relative;
+  padding-top: 100px;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  color: white;
+}
+body {
+  height: 150vh;
+}
+
+.events-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.event-map {
+  width: 40vw;
+  height: auto;
+}
+.timia-album-cover {
+  width: 50vw;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+}
+.events-content .events-text {
+  color: silver !important;
+  font-family: "Fleur De Leah", cursive;
+  font-weight: 400;
+  font-style: normal;
+  size: 20px;
+}
+.events-text {
+  size: 12px !important;
+}
+.background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  pointer-events: none;
+}
