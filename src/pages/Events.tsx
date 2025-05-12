@@ -25,9 +25,10 @@ const Events = () => {
           src="/Black and White Minimalist Photocentric Rose Hip-Hop Album Cover.png"
           alt=""
         />
+        <p>Live performances by Mia More and Prince Monarch</p>
         <p>$10 tickets in advanced, 15 at the door</p>
         <p>May 23</p>
-        <p>Doors at 7pm</p>
+        <p>Doors open at 7pm</p>
         <p>At 215 W in Ferndale</p>
         <iframe
           className="event-map"

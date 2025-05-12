@@ -5,9 +5,10 @@ import {
   query,
   onSnapshot,
   orderBy,
-  where,
-  getDocs,
   serverTimestamp,
+  doc,
+  updateDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import "./ChatWindow.css";
@@ -35,30 +36,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const conversationId = [actualSenderId, receiverId].sort().join("_");
-
+  const messagesRef = chatId
+    ? collection(db, "chats", chatId, "messages")
+    : null;
   const createOrGetChat = async () => {
     if (!receiverId) return;
-    try {
-      const chatRef = collection(db, "chats");
-      const q = query(chatRef, where("conversationId", "==", conversationId));
-      const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
-        setChatId(querySnapshot.docs[0].id);
-      } else {
-        const newChatRef = await addDoc(chatRef, {
-          conversationId,
-          from: actualSenderId,
-          to: receiverId,
-          participants: [actualSenderId, receiverId],
-          lastMessage: "",
-          createdAt: serverTimestamp(),
-        });
-        setChatId(newChatRef.id);
-      }
-    } catch (error) {
-      console.error("Error creating chat:", error);
-    }
+    // Thread key everyone agrees on:
+
+    // Keep it in state so the listener fires
+    setChatId(conversationId);
+
+    // Ensure the parent doc exists / update timestamp
+    await setDoc(
+      doc(db, "chats", conversationId),
+      {
+        participants: [actualSenderId, receiverId],
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
   };
 
   useEffect(() => {
@@ -98,7 +95,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       console.error("Error sending message:", error);
     }
   };
+  const handleAcceptRequest = async (songRequestId: string, msgId: string) => {
+    try {
+      // 1) Mark the song request doc as accepted
+      await updateDoc(doc(db, "songRequests", songRequestId), {
+        status: "accepted",
+        acceptedAt: serverTimestamp(),
+      });
 
+      // 2) Send a confirmation message back to the sender
+      await addDoc(messagesRef!, {
+        from: senderId,
+        to: receiverId,
+        text: "✅ Collaboration request accepted!",
+        createdAt: serverTimestamp(),
+      });
+
+      // 3) Flag the original chat message so the button disappears
+      await updateDoc(doc(messagesRef!, msgId), { accepted: true });
+    } catch (err) {
+      console.error("Error accepting request:", err);
+      alert("Couldn’t accept—check console for details.");
+    }
+  };
   return (
     <div className="chat-window">
       <div className="chat-header">
@@ -117,6 +136,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             }`}
           >
             <span>{msg.text}</span>
+            {msg.type === "collab_request" &&
+              msg.to === actualSenderId &&
+              !msg.accepted && (
+                <button
+                  className="accept-btn"
+                  onClick={() =>
+                    handleAcceptRequest(
+                      msg.songRequestId as string,
+                      msg.id as string
+                    )
+                  }
+                >
+                  Accept
+                </button>
+              )}
             <span className="timestamp">
               {msg.createdAt?.toDate().toLocaleTimeString()}
             </span>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { storage, db } from "./firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+// ADD getDocs to your Firestore import list:
 import {
   collection,
   addDoc,
@@ -9,6 +10,8 @@ import {
   doc,
   updateDoc,
   getDoc,
+  setDoc,
+  getDocs, // ← NEW
 } from "firebase/firestore";
 import { useAuth } from "./AuthContext";
 import "./MusicUpload.css";
@@ -17,18 +20,35 @@ const MusicUpload: React.FC = () => {
   const { user } = useAuth();
   const [coverArt, setCoverArt] = useState<File | null>(null);
   const [numSongs, setNumSongs] = useState(1);
-  const [songs, setSongs] = useState([
-    { title: "", audio: null as File | null },
-  ]);
   const [albumTitle, setAlbumTitle] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [vizionaryName, setVizionaryName] = useState<string>("");
-
+  // List of all registered Vizionaries
+  const [vizionariesList, setVizionariesList] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const getOwnerUid = async (vizionaryId: string): Promise<string | null> => {
+    const snap = await getDoc(doc(db, "vizionaries", vizionaryId));
+    return snap.exists() ? (snap.data().ownerUid as string | null) : null;
+  };
+  // CHANGE your songs state so each song has a collaborators array
+  const [songs, setSongs] = useState([
+    { title: "", audio: null as File | null, collaborators: [] as string[] },
+  ]);
   // Helper function to add debug messages
-
+  useEffect(() => {
+    (async () => {
+      const snap = await getDocs(collection(db, "vizionaries"));
+      const list = snap.docs.map((d) => ({
+        id: d.id,
+        name: d.data().name || d.id,
+      }));
+      setVizionariesList(list);
+    })();
+  }, []);
   // Fetch Vizionary Name on component mount
   useEffect(() => {
     if (!user) return;
@@ -50,14 +70,14 @@ const MusicUpload: React.FC = () => {
     setSongs(
       Array.from(
         { length: num },
-        (_, i) => songs[i] || { title: "", audio: null }
+        (_, i) => songs[i] || { title: "", audio: null, collaborators: [] }
       )
     );
   };
 
   const handleSongChange = (
     index: number,
-    key: "title" | "audio",
+    key: "title" | "audio" | "collaborators",
     value: any
   ) => {
     setSongs((prev) => {
@@ -67,7 +87,11 @@ const MusicUpload: React.FC = () => {
     });
   };
 
-  const uploadFileWithProgress = (file: File, storagePath: string) => {
+  const uploadFileWithProgress = (
+    file: File,
+    storagePath: string,
+    onProgress?: (percent: number) => void
+  ) => {
     return new Promise<string>((resolve, reject) => {
       const storageRef = ref(storage, storagePath);
       const uploadTask = uploadBytesResumable(storageRef, file);
@@ -78,6 +102,7 @@ const MusicUpload: React.FC = () => {
           const percent =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setUploadProgress(Math.round(percent));
+          if (onProgress) onProgress(percent);
         },
         reject,
         async () => {
@@ -93,6 +118,50 @@ const MusicUpload: React.FC = () => {
     });
   };
 
+  /**
+   * Send a plain chat message to a single user.
+   * Assumes you have a "messages" collection of direct-message threads
+   * or notifications. Tweak the fields to match your schema.
+   */
+  /**
+   * Write a message into chats/{threadId}/messages
+   * and create/merge the parent chat doc.
+   */
+  const sendChatMessage = async (
+    toUserId: string,
+    msg: string,
+    extra: Record<string, any>
+  ) => {
+    if (!user) return;
+
+    // Thread ID = smallerUID_biggerUID (stable, no duplicates)
+    const threadId =
+      user.uid < toUserId
+        ? `${user.uid}_${toUserId}`
+        : `${toUserId}_${user.uid}`;
+
+    // 1. Ensure parent chat doc exists / update its timestamp
+    await setDoc(
+      doc(db, "chats", threadId),
+      {
+        participants: [user.uid, toUserId],
+        updatedAt: serverTimestamp(),
+        lastSender: user.uid,
+      },
+      { merge: true }
+    );
+
+    // 2. Add message to sub-collection
+    await addDoc(collection(db, "chats", threadId, "messages"), {
+      from: user.uid, // who sent
+      to: toUserId, // who should read
+      type: "collab_request", // lets ChatWindow show Accept/pending
+      text: msg, // what you display in <span>{msg.text}</span>
+      songRequestId: extra.songRequestId,
+      read: false,
+      createdAt: serverTimestamp(), // songRequestId, type, etc.
+    });
+  };
   const handleUpload = async () => {
     if (!user) {
       setError("You must be logged in.");
@@ -129,17 +198,20 @@ const MusicUpload: React.FC = () => {
     setUploadProgress(0);
 
     try {
-      // Upload cover art
+      // -- Upload cover art to Firebase Storage and retrieve its download URL --
+      const coverArtURL = await uploadFileWithProgress(
+        coverArt,
+        `coverArt/${user.uid}/${Date.now()}_${coverArt.name}`
+      );
 
       // Create album if necessary
       let albumId: string | null = null;
-      let songIds: string[] = [];
 
       if (numSongs > 1) {
         try {
           const albumDoc = await addDoc(collection(db, "albums"), {
             title: albumTitle,
-            coverArt: coverArt,
+            coverArt: coverArtURL,
             vizionaries: [vizionaryName],
             createdAt: serverTimestamp(),
             uploader: user.uid,
@@ -152,35 +224,80 @@ const MusicUpload: React.FC = () => {
 
           if (albumCheck.exists()) {
           }
-        } catch (albumError) {}
+        } catch (albumError) {
+          console.error("Album creation error:", albumError);
+          setError("Failed to create album. See console for details.");
+          throw albumError;
+        }
       }
 
-      // Upload each song
-      for (let i = 0; i < songs.length; i++) {
-        const song = songs[i];
+      const progressMap = new Map<number, number>();
 
-        try {
+      const songUploadPromises = songs.map((song, index) =>
+        (async (): Promise<string | null> => {
           const audioURL = await uploadFileWithProgress(
             song.audio!,
-            `songs/${user.uid}/${Date.now()}_${song.audio!.name}`
+            `songs/${user.uid}/${Date.now()}_${song.audio!.name}`,
+            (pct) => {
+              progressMap.set(index, pct);
+              const overall =
+                [...progressMap.values()].reduce((a, b) => a + b, 0) /
+                songs.length;
+              setUploadProgress(Math.round(overall));
+            }
           );
 
-          // Add song document to Firestore
-          const songDoc = await addDoc(collection(db, "songs"), {
-            title: song.title,
-            audio: audioURL,
-            coverArt: coverArt,
-            order: i + 1,
-            albumId: albumId, // Associate with album if part of one
-            vizionaries: [vizionaryName],
-            uploader: user.uid,
-            createdAt: serverTimestamp(),
-          });
+          let finalSongDocId: string | null = null;
 
-          // Store song ID for album update
-          songIds.push(songDoc.id);
-        } catch (songError) {}
-      }
+          if (song.collaborators.length === 0) {
+            // 🔷 No collaborators → upload immediately
+            finalSongDocId = (
+              await addDoc(collection(db, "songs"), {
+                title: song.title,
+                audio: audioURL,
+                coverArt: coverArtURL,
+                order: index + 1,
+                albumId,
+                vizionaries: [vizionaryName],
+                uploader: user.uid,
+                createdAt: serverTimestamp(),
+              })
+            ).id;
+          } else {
+            // 🔶 Has collaborators → create a pending request
+            const requestRef = await addDoc(collection(db, "songRequests"), {
+              title: song.title,
+              audio: audioURL,
+              coverArt: coverArtURL,
+              albumId, // optional: keep linkage
+              uploader: user.uid,
+              collaborators: song.collaborators,
+              vizionaryName,
+              status: "pending", // pending | accepted | rejected
+              createdAt: serverTimestamp(),
+            });
+
+            // Notify each collaborator in chat
+            for (const vizId of song.collaborators) {
+              const ownerUid = await getOwnerUid(vizId);
+              if (!ownerUid) continue; // skip if vizionary has no owner
+
+              await sendChatMessage(
+                ownerUid,
+                `${vizionaryName} wants you to collaborate on “${song.title}”.`,
+                {
+                  type: "collab_request",
+                  songRequestId: requestRef.id, // whatever you store
+                }
+              );
+            }
+          }
+
+          return finalSongDocId;
+        })()
+      );
+
+      const songIds = await Promise.all(songUploadPromises);
 
       // Update the album with song IDs
       if (albumId && songIds.length > 0) {
@@ -206,7 +323,7 @@ const MusicUpload: React.FC = () => {
       }
 
       setSuccess("Music uploaded successfully!");
-      setSongs([{ title: "", audio: null }]);
+      setSongs([{ title: "", audio: null, collaborators: [] }]);
       setCoverArt(null);
       setAlbumTitle("");
       setNumSongs(1);
@@ -278,6 +395,24 @@ const MusicUpload: React.FC = () => {
               handleSongChange(index, "audio", file);
             }}
           />
+          <label>Collaborators:</label>
+          <select
+            multiple
+            value={song.collaborators}
+            onChange={(e) =>
+              handleSongChange(
+                index,
+                "collaborators",
+                Array.from(e.target.selectedOptions).map((o) => o.value)
+              )
+            }
+          >
+            {vizionariesList.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.name}
+              </option>
+            ))}
+          </select>
           {song.audio && (
             <p className="file-selected">Selected: {song.audio.name}</p>
           )}

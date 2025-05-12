@@ -5,317 +5,137 @@ import {
   where,
   onSnapshot,
   getDocs,
-  orderBy,
   doc,
   updateDoc,
+  setDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { useAuth } from "./AuthContext";
 import ChatWindow from "./ChatWindow";
 import "./UserList.css";
 
-interface User {
+interface UiUser {
   id: string;
   username: string;
-  lastMessageTime?: number;
-  lastResponseTime?: number;
 }
 
 const UserList: React.FC = () => {
   const { user } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [neverRespondedUsers, setNeverRespondedUsers] = useState<User[]>([]);
-  const [inactiveUsers, setInactiveUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>(
-    {}
-  );
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [allUsers, setAllUsers] = useState<UiUser[]>([]);
+  const [unread, setUnread] = useState<{ [k: string]: number }>({});
+  const [selected, setSelected] = useState<UiUser | null>(null);
+  const [q, setQ] = useState("");
 
-  // ✅ Fetch All Users & Sort By Interaction
+  /* 1️⃣  Load EVERY user once ----------------------------------------------- */
   useEffect(() => {
     if (!user) return;
 
-    console.log("📡 Fetching users and sorting by interaction...");
+    (async () => {
+      const snap = await getDocs(collection(db, "users"));
+      const list: UiUser[] = [];
+      snap.forEach((u) =>
+        list.push({ id: u.id, username: u.data().username || "Unknown" })
+      );
+      setAllUsers(list.filter((u) => u.id !== user.uid));
+    })();
+  }, [user]);
 
-    const fetchUsersWithMessages = async () => {
-      const usersRef = collection(db, "users");
-      const usersSnapshot = await getDocs(usersRef);
+  /* 2️⃣  Live unread counter ------------------------------------------------- */
+  useEffect(() => {
+    if (!user) return;
 
-      const chatsRef = collection(db, "chats");
-      const chatQuery = query(
-        chatsRef,
+    const unsub = onSnapshot(
+      query(
+        collection(db, "chats"),
         where("participants", "array-contains", user.uid)
-      );
-      const chatSnapshot = await getDocs(chatQuery);
+      ),
+      async (snap) => {
+        const counts: { [k: string]: number } = {};
 
-      const userMap: { [id: string]: User } = {};
-      const neverRespondedMap: { [id: string]: User } = {};
-      const inactiveUserMap: { [id: string]: User } = {};
-
-      // 📨 **Process Chat Messages**
-      const messagePromises = chatSnapshot.docs.map(async (chatDoc) => {
-        const chatId = chatDoc.id;
-        const messagesRef = collection(db, "chats", chatId, "messages");
-        const messagesSnapshot = await getDocs(
-          query(messagesRef, orderBy("createdAt", "desc"))
+        await Promise.all(
+          snap.docs.map(async (c) => {
+            const msgs = await getDocs(
+              query(
+                collection(db, "chats", c.id, "messages"),
+                where("to", "==", user.uid),
+                where("read", "==", false)
+              )
+            );
+            msgs.forEach((m) => {
+              const from = m.data().from as string;
+              counts[from] = (counts[from] || 0) + 1;
+            });
+          })
         );
 
-        if (messagesSnapshot.empty) return;
+        setUnread(counts);
+      }
+    );
 
-        let lastMessageTime = 0;
-        let lastResponseTime = 0;
-        let senderId = "";
-        let receiverId = "";
-
-        messagesSnapshot.docs.forEach((msgDoc) => {
-          const msg = msgDoc.data();
-          const messageTime = msg.createdAt?.toMillis?.() || 0;
-
-          if (messageTime > lastMessageTime) {
-            lastMessageTime = messageTime;
-            senderId = msg.from;
-            receiverId = msg.to;
-          }
-
-          if (msg.from === user.uid) {
-            lastResponseTime = messageTime;
-          }
-        });
-
-        const otherUserId = senderId === user.uid ? receiverId : senderId;
-
-        if (!userMap[otherUserId] && !neverRespondedMap[otherUserId]) {
-          const userDoc = await getDocs(
-            query(usersRef, where("id", "==", otherUserId))
-          );
-          const username = userDoc.docs[0]?.data()?.username || "Unknown";
-
-          if (lastResponseTime > 0) {
-            userMap[otherUserId] = {
-              id: otherUserId,
-              username,
-              lastMessageTime,
-              lastResponseTime,
-            };
-          } else {
-            neverRespondedMap[otherUserId] = {
-              id: otherUserId,
-              username,
-              lastMessageTime,
-            };
-          }
-        }
-      });
-
-      await Promise.all(messagePromises);
-
-      // 🛑 **Find Inactive Users**
-      usersSnapshot.docs.forEach((docSnap) => {
-        const userId = docSnap.id;
-        const username = docSnap.data().username || "Unknown";
-
-        if (
-          !userMap[userId] &&
-          !neverRespondedMap[userId] &&
-          userId !== user.uid
-        ) {
-          inactiveUserMap[userId] = { id: userId, username };
-        }
-      });
-
-      // **Sorting Logic**
-      const sortedUsers = Object.values(userMap).sort((a, b) => {
-        if (a.lastMessageTime !== b.lastMessageTime) {
-          return b.lastMessageTime! - a.lastMessageTime!;
-        }
-        return (b.lastResponseTime || 0) - (a.lastResponseTime || 0);
-      });
-
-      const sortedNeverRespondedUsers = Object.values(neverRespondedMap).sort(
-        (a, b) => b.lastMessageTime! - a.lastMessageTime!
-      );
-
-      console.log("✅ Sorted users:", sortedUsers);
-      console.log("✅ Never responded users:", sortedNeverRespondedUsers);
-      console.log("✅ Inactive users (never messaged):", inactiveUserMap);
-
-      setUsers(sortedUsers);
-      setNeverRespondedUsers(sortedNeverRespondedUsers);
-      setInactiveUsers(Object.values(inactiveUserMap));
-    };
-
-    fetchUsersWithMessages();
+    return () => unsub();
   }, [user]);
 
-  // ✅ Listen for Unread Messages
-  useEffect(() => {
+  /* 3️⃣  Click user → ensure thread exists & mark msgs read ------------------ */
+  const openChat = async (u: UiUser) => {
     if (!user) return;
+    setSelected(u);
 
-    console.log("📡 Listening for unread messages...");
+    const threadId =
+      user.uid < u.id ? `${user.uid}_${u.id}` : `${u.id}_${user.uid}`;
 
-    const chatsRef = collection(db, "chats");
-    const chatQuery = query(
-      chatsRef,
-      where("participants", "array-contains", user.uid)
+    // ensure parent doc exists / update timestamp
+    await setDoc(
+      doc(db, "chats", threadId),
+      { participants: [user.uid, u.id], updatedAt: serverTimestamp() },
+      { merge: true }
     );
 
-    const unsubscribeChats = onSnapshot(chatQuery, async (chatSnapshot) => {
-      const newUnreadCounts: { [key: string]: number } = {};
-
-      const chatPromises = chatSnapshot.docs.map(async (chatDoc) => {
-        const chatId = chatDoc.id;
-        const messagesRef = collection(db, "chats", chatId, "messages");
-        const unreadMessagesQuery = query(
-          messagesRef,
-          where("to", "==", user.uid),
-          where("read", "==", false)
-        );
-
-        const unreadMessagesSnapshot = await getDocs(unreadMessagesQuery);
-
-        unreadMessagesSnapshot.forEach((msgDoc) => {
-          const senderId = msgDoc.data().from;
-          newUnreadCounts[senderId] = (newUnreadCounts[senderId] || 0) + 1;
-        });
-      });
-
-      await Promise.all(chatPromises);
-
-      console.log("📩 Updated unread counts:", newUnreadCounts);
-      setUnreadCounts(newUnreadCounts);
-    });
-
-    return () => unsubscribeChats();
-  }, [user]);
-
-  // ✅ Open Chat & Reset Unread Count
-  const handleUserClick = async (u: User) => {
-    setSelectedUser(null); // Temporarily reset chat
-    setTimeout(() => {
-      setSelectedUser(u); // Reopen chat
-    }, 0);
-
-    // ✅ Mark messages as read in Firestore
-    const chatsRef = collection(db, "chats");
-    const chatQuery = query(
-      chatsRef,
-      where("participants", "array-contains", user?.uid)
-    );
-
-    const chatSnapshot = await getDocs(chatQuery);
-    chatSnapshot.docs.forEach(async (chatDoc) => {
-      const messagesRef = collection(db, "chats", chatDoc.id, "messages");
-      const unreadMessagesQuery = query(
-        messagesRef,
-        where("to", "==", user?.uid),
+    // mark unread → read
+    const unreadSnap = await getDocs(
+      query(
+        collection(db, "chats", threadId, "messages"),
+        where("to", "==", user.uid),
         where("read", "==", false)
-      );
-
-      const unreadMessagesSnapshot = await getDocs(unreadMessagesQuery);
-      unreadMessagesSnapshot.forEach(async (msgDoc) => {
-        await updateDoc(doc(db, "chats", chatDoc.id, "messages", msgDoc.id), {
-          read: true,
-        });
-      });
-    });
-
-    // ✅ Clear unread count in UI
-    setUnreadCounts((prev) => ({
-      ...prev,
-      [u.id]: 0,
-    }));
+      )
+    );
+    await Promise.all(
+      unreadSnap.docs.map((m) =>
+        updateDoc(doc(db, "chats", threadId, "messages", m.id), { read: true })
+      )
+    );
+    setUnread((p) => ({ ...p, [u.id]: 0 }));
   };
 
-  // ✅ Filter Users Based on Search
-  const filteredUsers = users.filter((u) =>
-    u.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredNeverRespondedUsers = neverRespondedUsers.filter((u) =>
-    u.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredInactiveUsers = inactiveUsers.filter((u) =>
-    u.username.toLowerCase().includes(searchQuery.toLowerCase())
+  const filtered = allUsers.filter((u) =>
+    u.username.toLowerCase().includes(q.toLowerCase())
   );
 
   return (
     <div className="chat-list-container">
-      <h2>Start a Chat</h2>
-
-      {/* 🔍 Search Bar */}
+      <h2>Chat</h2>
       <input
-        type="text"
-        placeholder="Search users..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
         className="user-search"
+        placeholder="Search users…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
       />
 
-      {/* 📌 Recent Conversations */}
-      {filteredUsers.length > 0 && (
-        <>
-          <h3>Recent Conversations</h3>
-          <ul className="user-list">
-            {filteredUsers.map((u) => (
-              <li
-                key={u.id}
-                onClick={() => handleUserClick(u)}
-                className="user-item"
-              >
-                @{u.username}
-                {unreadCounts[u.id] > 0 && (
-                  <span className="notification-bubble"></span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      <ul className="user-list">
+        {filtered.map((u) => (
+          <li key={u.id} className="user-item" onClick={() => openChat(u)}>
+            @{u.username}
+            {unread[u.id] > 0 && <span className="notification-bubble" />}
+          </li>
+        ))}
+      </ul>
 
-      {/* 📌 New Messages */}
-      {filteredNeverRespondedUsers.length > 0 && (
-        <>
-          <h3>New Messages</h3>
-          <ul className="user-list">
-            {filteredNeverRespondedUsers.map((u) => (
-              <li
-                key={u.id}
-                onClick={() => handleUserClick(u)}
-                className="user-item"
-              >
-                @{u.username}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {/* 📌 Inactive Users */}
-      {filteredInactiveUsers.length > 0 && (
-        <>
-          <h3>Other Users</h3>
-          <ul className="user-list">
-            {filteredInactiveUsers.map((u) => (
-              <li
-                key={u.id}
-                onClick={() => handleUserClick(u)}
-                className="user-item"
-              >
-                @{u.username}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      {selectedUser && (
+      {selected && (
         <ChatWindow
-          receiverId={selectedUser.id}
-          receiverUsername={selectedUser.username}
           senderId={user!.uid}
-          onClose={() => setSelectedUser(null)}
+          receiverId={selected.id}
+          receiverUsername={selected.username}
+          onClose={() => setSelected(null)}
         />
       )}
     </div>
