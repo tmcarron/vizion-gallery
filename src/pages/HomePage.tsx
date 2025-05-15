@@ -14,16 +14,16 @@ const HomePage: React.FC = () => {
 
   // Group songs by Vizionary
   const songsByVizionary = useMemo(() => {
-    if (allSongs.length === 0) return {};
-
     const groupedSongs: { [vizionary: string]: any[] } = {};
     allSongs.forEach((song) => {
-      song.vizionaries.forEach((vizionary: string) => {
-        if (!groupedSongs[vizionary]) {
-          groupedSongs[vizionary] = [];
-        }
-        groupedSongs[vizionary].push(song);
-      });
+      if (song.vizionaries !== null) {
+        song.vizionaries.forEach((vizionary: string) => {
+          if (!groupedSongs[vizionary]) {
+            groupedSongs[vizionary] = [];
+          }
+          groupedSongs[vizionary].push(song);
+        });
+      }
     });
 
     return groupedSongs;

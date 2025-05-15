@@ -40,16 +40,26 @@ const VizionaryProfile: React.FC = () => {
 
         if (vizDocSnap.exists()) {
           const rawData = vizDocSnap.data();
-          const name =
-            rawData?.vizionaryName || rawData?.name || "Unnamed Vizionary";
+          // Resolve the vizionary's display name from several possible fields.
+          const candidateName =
+            rawData?.vizionaryName ??
+            rawData?.name ??
+            rawData?.displayName ??
+            rawData?.artistName ??
+            "";
 
-          console.log("📄 Vizionary Name Found:", name);
-          setVizionaryName(name);
+          const resolvedName =
+            candidateName.trim().length > 0
+              ? candidateName
+              : decodeURIComponent(id);
+
+          console.log("📄 Vizionary Name Found (resolved):", resolvedName);
+          setVizionaryName(resolvedName);
           setProfilePic(rawData?.profilePic || "/default-profile.png");
           setBio(rawData?.bio || "This vizionary has not written a bio yet.");
         } else {
           console.warn("⚠️ Vizionary not found:", id);
-          setVizionaryName(null);
+          setVizionaryName(decodeURIComponent(id));
           setProfilePic("/default-profile.png");
           setBio("Bio not available.");
         }
