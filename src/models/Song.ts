@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export default interface Song {
   id: string;
   title: string;
@@ -7,4 +9,5 @@ export default interface Song {
   album?: string;
   vizionaries: string[]; // ✅ Required
   lastInteracted?: { [userId: string]: number };
+  createdAt?: Timestamp;
 }

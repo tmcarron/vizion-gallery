@@ -97,19 +97,26 @@ const VizionaryProfile: React.FC = () => {
         console.log("📀 Found album:", doc.id, doc.data());
         return { id: doc.id, ...doc.data() } as Album;
       });
+      // 🔄 Order albums from least‑recent (oldest) to most‑recent (newest)
+      albumsList.sort((a, b) => {
+        const toMillis = (d: any) =>
+          d?.toMillis ? d.toMillis() : new Date(d ?? 0).getTime();
+        const aDate = toMillis(a.createdAt ?? a.createdAt);
+        const bDate = toMillis(b.createdAt ?? b.createdAt);
+        return aDate - bDate; // ascending
+      });
 
       setAlbums(albumsList);
 
-      // ✅ Collect all song IDs from albums
       const songIdsSet = new Set<string>();
       albumsList.forEach((album) => {
         album.songIds?.forEach((songId) => songIdsSet.add(songId));
       });
 
-      console.log("🎵 Songs in Albums:", songIdsSet);
+      console.log("Songs in Albums:", songIdsSet);
       setAlbumSongIds(songIdsSet);
     } catch (error) {
-      console.error("❌ Error fetching albums:", error);
+      console.error("Error fetching albums:", error);
     }
   };
 

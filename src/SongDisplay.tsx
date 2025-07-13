@@ -24,6 +24,13 @@ import PlaylistPortal from "./pages/PlaylistPortal";
 import { Playlist } from "./models/Playlist";
 import Album from "./models/Album";
 
+// Utility: newest → oldest by createdAt
+const compareByCreatedAtDesc = (a: Song, b: Song) => {
+  const toMillis = (d: any) =>
+    d?.toMillis ? d.toMillis() : new Date(d ?? 0).getTime();
+  return toMillis(b.createdAt) - toMillis(a.createdAt);
+};
+
 interface SongDisplayProps {
   vizionaryId?: string;
   albumId?: string;
@@ -46,8 +53,7 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
   const { setSelectedSong, allSongs } = useContext(MusicContext);
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSongForPlaylist, setSelectedSongForPlaylist] =
-    useState<Song | null>(null);
+  const [selectedSongForPlaylist] = useState<Song | null>(null);
   const [showPlaylistPortal, setShowPlaylistPortal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [playIconUrl, setPlayIconUrl] = useState("");
@@ -55,7 +61,7 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
   // If songs are supplied via props, use them and skip fetching
   useEffect(() => {
     if (songsProp) {
-      setSongs(songsProp);
+      setSongs([...songsProp].sort(compareByCreatedAtDesc));
       setLoading(false);
       dataFetchedRef.current = true;
     }
@@ -134,10 +140,6 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
   );
 
   // Isolated function to handle adding to playlist without triggering rerenders
-  const handleAddToPlaylist = useCallback((song: Song) => {
-    setSelectedSongForPlaylist(song);
-    setShowPlaylistPortal(true);
-  }, []);
 
   // Check if props have meaningfully changed to prevent unnecessary data fetching
   const shouldRefetch = useCallback(() => {
@@ -179,7 +181,7 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
       // Case 1: Use filtered songs directly if provided
       if (memoizedFilteredSongs && memoizedFilteredSongs.length > 0) {
         console.log("✅ Using filteredSongs instead of fetching.");
-        setSongs(memoizedFilteredSongs);
+        setSongs([...memoizedFilteredSongs].sort(compareByCreatedAtDesc));
         setLoading(false);
         dataFetchedRef.current = true;
         return;
@@ -220,7 +222,7 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
             .filter((song): song is Song => Boolean(song));
 
           if (isMounted) {
-            setSongs(orderedSongs);
+            setSongs([...orderedSongs].sort(compareByCreatedAtDesc));
             setLoading(false);
             dataFetchedRef.current = true;
           }
@@ -264,12 +266,13 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
                     audio: await convertGsUrlToHttps(songData.audio),
                     coverArt: await convertGsUrlToHttps(songData.coverArt),
                     vizionaries: songData.vizionaries || [],
+                    createdAt: songData.createdAt,
                   };
                 })
               );
 
               if (isMounted) {
-                setSongs(fetchedSongs);
+                setSongs([...fetchedSongs].sort(compareByCreatedAtDesc));
                 setLoading(false);
                 dataFetchedRef.current = true;
               }
@@ -316,12 +319,13 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
                   audio: await convertGsUrlToHttps(songData.audio),
                   coverArt: await convertGsUrlToHttps(songData.coverArt),
                   vizionaries: songData.vizionaries || [],
+                  createdAt: songData.createdAt,
                 };
               })
             );
 
             if (isMounted) {
-              setSongs(fetchedSongs);
+              setSongs([...fetchedSongs].sort(compareByCreatedAtDesc));
               setLoading(false);
               dataFetchedRef.current = true;
             }
@@ -408,15 +412,10 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
                     {playIconUrl ? (
                       <img src={playIconUrl} alt="Play" />
                     ) : (
-                      "▶️" // Fallback if icon doesn't load
+                      "▶" // Fallback if icon doesn't load
                     )}
                   </button>
-                  <button
-                    className="add-to-playlist-button"
-                    onClick={() => handleAddToPlaylist(song)}
-                  >
-                    +
-                  </button>
+
                   {onRemoveSong && (
                     <button
                       className="remove-song-button"

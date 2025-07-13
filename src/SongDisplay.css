@@ -155,6 +155,8 @@
   width: 20px;
   transform: translateY(-5px);
   color: black;
+  margin: 10px;
+  margin-bottom: 5px;
 }
 .play-button img {
   height: 20px;
@@ -188,4 +190,18 @@
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+@media (max-width: 480px) {
+  .song-item {
+    max-width: 60vw;
+    display: flex;
+    flex-direction: column;
+  }
+  .song-details {
+    display: flex;
+    flex-direction: column;
+    font-size: 6px;
+    overflow-x: scroll;
+  }
 }

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "./firebase";
+import { MusicContext } from "./Player/MusicContext";
 import SongDisplay from "./SongDisplay";
 import "./AlbumPlayer.css";
 
@@ -9,7 +10,7 @@ interface AlbumDoc {
   title: string;
   coverArt?: string;
   vizionaries?: string[];
-  /* songIds are pulled by SongDisplay via albumId prop */
+  songIds?: string[];
 }
 
 interface AlbumPlayerProps {
@@ -21,6 +22,24 @@ const AlbumPlayer: React.FC<AlbumPlayerProps> = ({ albumId }) => {
   const navigate = useNavigate();
   const [album, setAlbum] = useState<AlbumDoc | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const { allSongs, setArmedPlaylist, setSelectedSong } =
+    useContext(MusicContext);
+
+  const handlePlayAlbum = () => {
+    if (!album?.songIds?.length) return;
+
+    // Arm entire album as playlist
+    setArmedPlaylist({
+      id: albumId,
+      songIds: album.songIds,
+      name: album.title,
+    });
+
+    // Start playback with the first track
+    const firstSong = allSongs.find((s) => s.id === album.songIds![0]);
+    if (firstSong) setSelectedSong(firstSong);
+  };
 
   // Sync URL
   useEffect(() => {
@@ -60,6 +79,10 @@ const AlbumPlayer: React.FC<AlbumPlayerProps> = ({ albumId }) => {
         )}
         <h2 className="album-title">{album.title}</h2>
       </div>
+
+      <button className="play-album-button" onClick={handlePlayAlbum}>
+        Play Album
+      </button>
 
       {/* List songs in this album */}
       <SongDisplay albumId={albumId} />

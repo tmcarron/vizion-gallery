@@ -42,21 +42,6 @@
   color: rgb(0, 0, 0) !important;
 }
 
-.play-album-button {
-  margin-top: 8px;
-  padding: 5px 10px;
-  font-size: 12px;
-  background-color: var(--contrastColor);
-  color: var(--dominantColor);
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.play-album-button:hover {
-  background-color: var(--complementaryColor);
-}
-
 /* Expandable song list */
 .album-songs {
   margin-top: 10px;
@@ -103,7 +88,7 @@
   padding: 5px 10px;
   font-size: 12px;
   background-color: var(--complementaryColor) !important;
-  color: var(--dominantColor);
+  color: var(--contrastColor) !important;
   border: none;
   border-radius: 5px;
   cursor: pointer;

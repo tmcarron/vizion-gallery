@@ -42,7 +42,6 @@ const PlaylistPortal: React.FC<PlaylistPortalProps> = ({
   const [expandedPlaylists, setExpandedPlaylists] = useState<Set<string>>(
     new Set()
   );
-  const [setShareLink] = useState<string | null>(null); // State to hold the shareable link
 
   // Fetch playlists
   useEffect(() => {

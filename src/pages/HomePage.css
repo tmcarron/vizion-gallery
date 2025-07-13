@@ -1,6 +1,6 @@
 h1 {
   text-align: center;
-  color: black !important;
+  color: var(--contrastColor) !important;
 }
 p {
   margin: 10px;
@@ -59,7 +59,7 @@ a {
   display: block;
 }
 .vizionary-section h2 {
-  color: black !important;
+  color: var(--contrastColor) !important;
 }
 
 .search-results {
@@ -111,10 +111,11 @@ a {
 
 .search-song-title {
   font-size: 14px;
-  color: var(--contrastColor) !important;
+  color: var(--dominatColor) !important;
 }
 .vizionary-link {
   margin-bottom: 35px;
+  color: var(--dominatColor) !important;
 }
 .catchphrase {
   color: var(--contrastColor);

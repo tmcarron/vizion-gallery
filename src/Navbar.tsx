@@ -42,12 +42,6 @@ const NavBar: React.FC = () => {
     console.log("Logged out successfully.");
   };
 
-  const handleOpenPlaylistPortal = () => {
-    if (!showPlaylistPortal) {
-      setShowPlaylistPortal(true);
-    }
-  };
-
   return (
     <>
       <nav className="nav-bar" style={{ backgroundColor: dominantColor }}>
