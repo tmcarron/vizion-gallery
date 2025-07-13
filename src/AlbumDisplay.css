@@ -27,10 +27,13 @@
 }
 .album-cover {
   box-shadow: none;
+  height: 160px !important;
+  width: 160px !important;
+  margin: 0 !important;
 }
 
 .album-cover img {
-  width: auto;
+  width: 160px;
   height: 160px;
   object-fit: cover;
   border-radius: 5px;
