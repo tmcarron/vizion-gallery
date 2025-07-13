@@ -28,13 +28,20 @@ interface SongDisplayProps {
   vizionaryId?: string;
   albumId?: string;
   playlist?: Playlist;
+  /** Optional override: directly supply songs to display (skips fetching) */
+  songs?: Song[];
+  /** Optional filtered list (legacy) */
   filteredSongs?: Song[];
+  /** Fired when the user wants to remove a song */
+  onRemoveSong?: (songId: string) => void;
 }
 
 const SongDisplay: React.FC<SongDisplayProps> = ({
   vizionaryId,
   albumId,
   filteredSongs,
+  songs: songsProp,
+  onRemoveSong,
 }) => {
   const { setSelectedSong, allSongs } = useContext(MusicContext);
   const [songs, setSongs] = useState<Song[]>([]);
@@ -44,6 +51,15 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
   const [showPlaylistPortal, setShowPlaylistPortal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [playIconUrl, setPlayIconUrl] = useState("");
+
+  // If songs are supplied via props, use them and skip fetching
+  useEffect(() => {
+    if (songsProp) {
+      setSongs(songsProp);
+      setLoading(false);
+      dataFetchedRef.current = true;
+    }
+  }, [songsProp]);
 
   // Track if data has been fetched to prevent refetching
   const dataFetchedRef = useRef(false);
@@ -60,18 +76,26 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
 
   // Convert gs:// URLs to https://
   const convertGsUrlToHttps = useCallback(
-    async (gsUrl?: string): Promise<string> => {
-      if (!gsUrl || !gsUrl.startsWith("gs://"))
-        return gsUrl || "/fallback-cover.jpg";
-      try {
-        const storageRef = ref(
-          storage,
-          gsUrl.replace("gs://vizion-gallery.appspot.com/", "")
-        );
-        return await getDownloadURL(storageRef);
-      } catch {
-        return "/fallback-cover.jpg";
+    async (url?: string): Promise<string> => {
+      // 1. Fallback for empty or missing values
+      if (!url) return "/fallback-cover.jpg";
+
+      // 2. If it's already an HTTP(S) URL, just return it
+      if (url.startsWith("http://") || url.startsWith("https://")) return url;
+
+      // 3. If it's a gs:// link, convert via getDownloadURL
+      if (url.startsWith("gs://")) {
+        try {
+          const storageRef = ref(storage, url);
+          return await getDownloadURL(storageRef);
+        } catch (err) {
+          console.error("Failed to convert gs:// URL:", err);
+          return "/fallback-cover.jpg";
+        }
       }
+
+      // 4. Unknown scheme – fall back
+      return "/fallback-cover.jpg";
     },
     []
   );
@@ -376,22 +400,34 @@ const SongDisplay: React.FC<SongDisplayProps> = ({
               )}
               <div className="song-details">
                 <p className="song-title">{song.title}</p>
-                <button
-                  className="play-button"
-                  onClick={() => handlePlaySong(song)}
-                >
-                  {playIconUrl ? (
-                    <img src={playIconUrl} alt="Play" />
-                  ) : (
-                    "▶️" // Fallback if icon doesn't load
+                <section className="buttonSection">
+                  <button
+                    className="play-button"
+                    onClick={() => handlePlaySong(song)}
+                  >
+                    {playIconUrl ? (
+                      <img src={playIconUrl} alt="Play" />
+                    ) : (
+                      "▶️" // Fallback if icon doesn't load
+                    )}
+                  </button>
+                  <button
+                    className="add-to-playlist-button"
+                    onClick={() => handleAddToPlaylist(song)}
+                  >
+                    +
+                  </button>
+                  {onRemoveSong && (
+                    <button
+                      className="remove-song-button"
+                      onClick={() => {
+                        onRemoveSong(song.id);
+                      }}
+                    >
+                      Remove
+                    </button>
                   )}
-                </button>
-                <button
-                  className="add-to-playlist-button"
-                  onClick={() => handleAddToPlaylist(song)}
-                >
-                  +
-                </button>
+                </section>
               </div>
             </li>
           ))}

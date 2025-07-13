@@ -25,9 +25,12 @@
 .album-item:hover {
   transform: scale(1.05);
 }
+.album-cover {
+  box-shadow: none;
+}
 
 .album-cover img {
-  width: 100%;
+  width: auto;
   height: 160px;
   object-fit: cover;
   border-radius: 5px;

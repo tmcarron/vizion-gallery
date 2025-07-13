@@ -12,7 +12,7 @@ import { db } from "../firebase";
 import "./VizionaryProfile.css";
 import SongDisplay from "../SongDisplay";
 import Album from "../models/Album";
-import AlbumDisplay from "../AbumDisplay";
+import AlbumDisplay from "../AlbumDisplay";
 
 const VizionaryProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();

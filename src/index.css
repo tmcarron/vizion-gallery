@@ -1,6 +1,5 @@
 body {
   width: 100vw;
-  font-family: "bookmania", serif;
   font-weight: 400;
   font-style: normal;
   padding-top: 30px;
@@ -15,21 +14,22 @@ body {
   padding-bottom: 200px;
 }
 * {
-  font-family: "bookmania";
-  list-style-type: none;
+  font-family: "Literata";
+  font-weight: 300;
+  font-style: normal;
 }
 .song-list {
   list-style: none;
   padding: 0 !important;
   padding-top: 30px;
   margin: 0 !important;
-  max-height: 400px; /* ✅ Set max height for scrolling */
-  overflow-y: auto; /* ✅ Enables vertical scrolling */
+  max-height: 400px;
+  overflow-y: auto;
   display: flex;
-  flex-direction: column; /* ✅ Ensures songs are stacked vertically */
-  gap: 10px; /* ✅ Adds spacing between items */
-  scrollbar-width: thin; /* ✅ Makes scrollbar less intrusive */
-  scrollbar-color: #888 #f1f1f1; /* ✅ Custom scrollbar colors */
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
   align-items: center;
   width: 100%;
 }
@@ -54,17 +54,19 @@ body {
   margin-top: 0;
 }
 .play-button {
-  margin-top: 0;
+  margin-top: 0 !important;
+  padding-top: 0;
   transform: translateY(0);
 }
 .song-item {
+  display: flex;
   background: white;
   border-radius: 8px;
   padding: 10px;
   display: flex;
   align-items: center;
   transition: background 0.2s ease-in-out;
-  width: 100% !important;
+  width: 400px !important;
 }
 
 .song-item:hover {
@@ -94,4 +96,7 @@ body {
   display: inline-block;
   margin-left: 6px;
   z-index: 9999 !important;
+}
+button {
+  background-color: var(--complementaryColor);
 }

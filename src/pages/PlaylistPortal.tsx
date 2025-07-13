@@ -42,6 +42,7 @@ const PlaylistPortal: React.FC<PlaylistPortalProps> = ({
   const [expandedPlaylists, setExpandedPlaylists] = useState<Set<string>>(
     new Set()
   );
+  const [setShareLink] = useState<string | null>(null); // State to hold the shareable link
 
   // Fetch playlists
   useEffect(() => {
@@ -74,7 +75,7 @@ const PlaylistPortal: React.FC<PlaylistPortalProps> = ({
             name: data.name,
             createdBy: data.createdBy,
             createdAt: data.createdAt,
-            songIds, // ✅ explicitly added here
+            songIds,
             songs,
           };
         })
@@ -108,19 +109,18 @@ const PlaylistPortal: React.FC<PlaylistPortalProps> = ({
       setNewPlaylistName("");
       setCreatingPlaylist(false);
     } catch (error) {
-      console.error("❌ Error creating playlist:", error);
+      console.error("Error creating playlist:", error);
     }
   };
 
-  // Delete playlist ✅ Minimal clear implementation
   const handleDeletePlaylist = async (playlistId: string) => {
     if (!window.confirm("Are you sure you want to delete this playlist?"))
       return;
     try {
       await deleteDoc(doc(db, "playlists", playlistId));
-      console.log("✅ Playlist deleted successfully");
+      console.log("Playlist deleted successfully");
     } catch (error) {
-      console.error("❌ Error deleting playlist:", error);
+      console.error(" Error deleting playlist:", error);
     }
   };
 
@@ -152,7 +152,7 @@ const PlaylistPortal: React.FC<PlaylistPortalProps> = ({
       const playlistRef = doc(db, "playlists", playlist.id);
       const updatedSongIds = [...playlist.songIds, songToAdd.id];
       await updateDoc(playlistRef, { songs: updatedSongIds });
-      alert(`✅ "${songToAdd.title}" added to "${playlist.name}"`);
+      alert(` "${songToAdd.title}" added to "${playlist.name}"`);
       onClose();
     }
   };
@@ -208,7 +208,7 @@ const PlaylistPortal: React.FC<PlaylistPortalProps> = ({
               </div>
             ) : (
               <button onClick={() => setCreatingPlaylist(true)}>
-                ➕ Create Playlist
+                Create Playlist
               </button>
             )}
           </div>
@@ -247,8 +247,9 @@ const PlaylistPortal: React.FC<PlaylistPortalProps> = ({
                       className="delete-button"
                       onClick={() => handleDeletePlaylist(playlist.id)}
                     >
-                      🗑️
+                      Delete Playlist
                     </button>
+                    <button className="share-button">Share</button>
                   </div>
                 </div>
 

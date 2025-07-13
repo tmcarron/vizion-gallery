@@ -29,8 +29,15 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   width: 100%;
   overflow-y: scroll;
+  background-image: linear-gradient(
+    to bottom,
+    var(--complementaryColor),
+    white
+  ) !important;
 }
 .HomePage .song-item {
   width: 100%;
@@ -105,4 +112,10 @@ a {
 .search-song-title {
   font-size: 14px;
   color: var(--contrastColor) !important;
+}
+.vizionary-link {
+  margin-bottom: 35px;
+}
+.catchphrase {
+  color: var(--contrastColor);
 }

@@ -20,7 +20,7 @@ const AudioPlayerComponent: React.FC = () => {
   const [coverArt, setCoverArt] = useState("");
   const [dominantColor, setDominantColor] = useState("#222");
   const [contrastColor, setContrastColor] = useState("#fff");
-  const [setComplementaryColor] = useState("#ffff");
+  const [complementaryColor, setComplementaryColor] = useState("#fff");
   const [isPlaying, setIsPlaying] = useState(false);
   // const [isLoading] = useState(true);
   const [duration, setDuration] = useState(0);
@@ -28,10 +28,8 @@ const AudioPlayerComponent: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const sliderRef = useRef<HTMLInputElement | null>(null);
 
-  // ✅ Load first song from armedPlaylist clearly (autoPlay=true)
-
-  // ✅ Update audio source when selectedSong changes
   useEffect(() => {
     const loadAndPlaySong = async () => {
       if (!audioRef.current || !selectedSong?.audio) return;
@@ -62,7 +60,8 @@ const AudioPlayerComponent: React.FC = () => {
     };
 
     loadAndPlaySong();
-  }, [selectedSong, isPlaying]); // ✅ Depend on isPlaying
+  }, [selectedSong, isPlaying]);
+
   useEffect(() => {
     if (!audioRef.current) return;
 
@@ -111,11 +110,21 @@ const AudioPlayerComponent: React.FC = () => {
     };
   }, []);
 
+  // Sync slider fill color with playback progress
+  useEffect(() => {
+    if (!sliderRef.current || !duration) return;
+    const percent = (currentTime / duration) * 100;
+    sliderRef.current.style.setProperty("--progress", `${percent}%`);
+    sliderRef.current.setAttribute("data-progress", ""); // triggers CSS gradient
+  }, [currentTime, duration]);
+
   const handleSeek = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!audioRef.current) return;
-      const newTime = (Number(e.target.value) / 100) * duration;
+      if (!audioRef.current || !sliderRef.current) return;
+      const percent = Number(e.target.value);
+      const newTime = (percent / 100) * duration;
       audioRef.current.currentTime = newTime;
+      sliderRef.current.style.setProperty("--progress", `${percent}%`); // live gradient while dragging
     },
     [duration]
   );
@@ -215,25 +224,31 @@ const AudioPlayerComponent: React.FC = () => {
         ref(storage, selectedSong.coverArt)
       );
       setCoverArt(coverArtUrl);
-      const { base, contrast } = await getBaseContrastAndComplementaryColor(
-        coverArtUrl
-      );
+      const { base, contrast, complementary } =
+        await getBaseContrastAndComplementaryColor(coverArtUrl);
       setDominantColor(base);
       setContrastColor(contrast);
-      setComplementaryColor;
+      setComplementaryColor(complementary);
     };
     updateCoverArt();
   }, [selectedSong]);
   useEffect(() => {
-    console.log("🎵 selectedSong:", selectedSong);
-    console.log("🔗 selectedSong.audio:", selectedSong?.audio);
-    console.log("🎧 audioRef.current.src:", audioRef.current?.src);
+    console.log("selectedSong:", selectedSong);
+    console.log("selectedSong.audio:", selectedSong?.audio);
+    console.log("audioRef.current.src:", audioRef.current?.src);
   }, [selectedSong]);
   return (
     <section className="audio-player">
       <div
         className={`player-container ${isCollapsed ? "collapsed" : ""}`}
-        style={{ backgroundColor: dominantColor }}
+        style={
+          {
+            backgroundColor: dominantColor,
+            "--dominantColor": dominantColor,
+            "--contrastColor": contrastColor,
+            "--complementaryColor": complementaryColor,
+          } as React.CSSProperties
+        }
       >
         <audio ref={audioRef} />
         <div className="player-content">
@@ -275,6 +290,7 @@ const AudioPlayerComponent: React.FC = () => {
               <button onClick={handleNextSong}>{">"}</button>
             </section>
             <input
+              ref={sliderRef}
               className="audio-bar"
               type="range"
               min={0}

@@ -10,33 +10,102 @@ import {
   query,
   where,
   getDocs,
+  deleteDoc,
 } from "firebase/firestore";
 import "./VizionaryPortal.css";
 import SongDisplay from "../SongDisplay";
 import Album from "../models/Album";
-import AlbumDisplay from "../AbumDisplay";
+import AlbumDisplay from "../AlbumDisplay";
+import Song from "../models/Song";
 
 const VizionaryPortal = () => {
   const { user } = useAuth();
 
+  const [songs, setSongs] = useState<Song[]>([]);
   const [profilePic, setProfilePic] = useState("");
   const [bio, setBio] = useState("");
   const [vizionaryId, setVizionaryId] = useState("");
   const [albums, setAlbums] = useState<Album[]>([]);
-  const [albumSongIds, setAlbumSongIds] = useState<Set<string>>(new Set()); // ✅ Fixed state initialization
+  const [albumSongIds, setAlbumSongIds] = useState<Set<string>>(new Set());
 
-  console.log(albumSongIds);
+  // ────────────────────────────────────────────
+  // FETCH SONGS THAT BELONG TO THIS VIZIONARY
+  // ────────────────────────────────────────────
+  const fetchSongs = async () => {
+    if (!vizionaryId) return;
+    try {
+      const songQuery = query(
+        collection(db, "songs"),
+        where("vizionaries", "array-contains", vizionaryId)
+      );
+      const songSnapshots = await getDocs(songQuery);
+      const songList = songSnapshots.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Song[];
+      setSongs(songList);
+    } catch (error) {
+      console.error("Error fetching songs:", error);
+    }
+  };
+
+  // ────────────────────────────────────────────
+  // REMOVE A SINGLE SONG
+  // ────────────────────────────────────────────
+  const handleRemoveSong = async (songId: string) => {
+    try {
+      await deleteDoc(doc(db, "songs", songId));
+      await fetchSongs(); // refresh list
+      await fetchAlbums(); // in case albums referenced it
+    } catch (error) {
+      console.error("Error removing song:", error);
+      alert("Failed to remove song.");
+    }
+  };
+
+  // ────────────────────────────────────────────
+  // REMOVE AN ALBUM (and its songs)
+  // ────────────────────────────────────────────
+  const handleRemoveAlbum = async (albumId: string) => {
+    try {
+      const albumSnap = await getDoc(doc(db, "albums", albumId));
+      if (albumSnap.exists()) {
+        const albumData = albumSnap.data() as Album;
+        if (albumData.songIds?.length) {
+          // delete each song in the album
+          await Promise.all(
+            albumData.songIds.map((id) => deleteDoc(doc(db, "songs", id)))
+          );
+        }
+      }
+      await deleteDoc(doc(db, "albums", albumId));
+      await fetchAlbums();
+      await fetchSongs();
+    } catch (error) {
+      console.error("Error removing album:", error);
+      alert("Failed to remove album.");
+    }
+  };
+
+  // ────────────────────────────────────────────
+  // SONGS DISPLAYED = ALL SONGS – SONGS IN ALBUMS
+  // ────────────────────────────────────────────
+  const displayedSongs = songs.filter((song) => !albumSongIds.has(song.id));
+
+  // ────────────────────────────────────────────
+  // FETCH USER PROFILE DATA
+  // ────────────────────────────────────────────
   const fetchUserData = useCallback(async () => {
     if (!user) return;
 
-    const userDocRef = doc(db, "users", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
-    if (userDocSnap.exists()) {
-      const userData = userDocSnap.data();
-      setProfilePic(userData.profilePic || "");
-      setBio(userData.bio || "");
-      setVizionaryId(userData.vizionaryID || user.uid);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      setProfilePic(data.profilePic || "");
+      setBio(data.bio || "");
+      setVizionaryId(data.vizionaryID || user.uid);
     }
   }, [user]);
 
@@ -44,7 +113,9 @@ const VizionaryPortal = () => {
     fetchUserData();
   }, [fetchUserData]);
 
-  // ✅ Fetch albums for the logged-in Vizionary
+  // ────────────────────────────────────────────
+  // FETCH ALBUMS FOR THIS VIZIONARY
+  // ────────────────────────────────────────────
   const fetchAlbums = useCallback(async () => {
     if (!vizionaryId) return;
 
@@ -61,13 +132,12 @@ const VizionaryPortal = () => {
 
       setAlbums(albumList);
 
-      // ✅ Collect song IDs from albums
-      const songIdsSet = new Set<string>();
-      albumList.forEach((album) => {
-        album.songIds?.forEach((songId) => songIdsSet.add(songId));
-      });
-
-      setAlbumSongIds(songIdsSet);
+      // gather song IDs already in albums
+      const ids = new Set<string>();
+      albumList.forEach((album) =>
+        album.songIds?.forEach((id: string) => ids.add(id))
+      );
+      setAlbumSongIds(ids);
     } catch (error) {
       console.error("Error fetching albums:", error);
     }
@@ -76,9 +146,13 @@ const VizionaryPortal = () => {
   useEffect(() => {
     if (vizionaryId) {
       fetchAlbums();
+      fetchSongs();
     }
   }, [vizionaryId, fetchAlbums]);
 
+  // ────────────────────────────────────────────
+  // PROFILE PIC HANDLER
+  // ────────────────────────────────────────────
   const handleProfilePicChange = async (file: File) => {
     if (!user || !vizionaryId) return;
 
@@ -89,9 +163,12 @@ const VizionaryPortal = () => {
     await updateDoc(doc(db, "users", user.uid), { profilePic: url });
     await updateDoc(doc(db, "vizionaries", vizionaryId), { profilePic: url });
 
-    fetchUserData(); // ✅ Update immediately after changes
+    fetchUserData();
   };
 
+  // ────────────────────────────────────────────
+  // BIO SUBMIT HANDLER
+  // ────────────────────────────────────────────
   const handleBioSubmit = async () => {
     if (!user || !vizionaryId) return;
 
@@ -99,12 +176,15 @@ const VizionaryPortal = () => {
     await updateDoc(doc(db, "vizionaries", vizionaryId), { bio });
 
     alert("Bio updated successfully!");
-
-    fetchUserData(); // ✅ Immediately refresh after updating bio
+    fetchUserData();
   };
 
+  // ────────────────────────────────────────────
+  // RENDER
+  // ────────────────────────────────────────────
   return (
     <div className="vizionary-profile">
+      {/* profile picture */}
       <div className="profile-pic-container">
         <img
           src={profilePic || "/default-profile.png"}
@@ -120,6 +200,7 @@ const VizionaryPortal = () => {
         />
       </div>
 
+      {/* bio */}
       <div className="bio-container">
         <textarea
           placeholder="Write your bio here..."
@@ -129,15 +210,19 @@ const VizionaryPortal = () => {
         <button onClick={handleBioSubmit}>Submit Bio</button>
       </div>
 
-      {/* ✅ Display Albums */}
-      {albums.length > 0 ? (
-        <AlbumDisplay albums={albums} />
+      {/* albums */}
+      {albums.length ? (
+        <AlbumDisplay albums={albums} onAlbumRemove={handleRemoveAlbum} />
       ) : (
         <p>No albums available.</p>
       )}
 
-      {/* ✅ Display Songs but exclude ones already in albums */}
-      <SongDisplay vizionaryId={vizionaryId} />
+      {/* songs */}
+      <SongDisplay
+        vizionaryId={vizionaryId}
+        songs={displayedSongs}
+        onRemoveSong={handleRemoveSong}
+      />
     </div>
   );
 };

@@ -1,0 +1,56 @@
+.album-cover {
+  margin-top: 50px;
+  width: 250px !important;
+  height: 250px !important;
+}
+
+/* AlbumPlayer layout */
+.AlbumPlayer {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Header with cover + title */
+.album-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+/* Cover art */
+.album-cover {
+  width: 60vw;
+  max-width: 400px;
+  height: auto;
+  max-height: 60vh;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* Placeholder when no art */
+.album-cover.placeholder {
+  background: #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #555;
+}
+
+/* Title */
+.album-title {
+  font-size: clamp(1.5rem, 2.5vw + 1rem, 2.5rem);
+  font-weight: 600;
+}
+
+/* Song list inherited from SongDisplay */
+.AlbumPlayer .song-list {
+  width: 100%;
+}

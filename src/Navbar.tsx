@@ -61,13 +61,6 @@ const NavBar: React.FC = () => {
             >
               Home
             </Link>
-            <Link
-              to="/events"
-              className="nav-button"
-              style={{ color: contrastColor }}
-            >
-              Events
-            </Link>
           </section>
 
           {/* SECTION 2: User Actions */}
@@ -82,14 +75,6 @@ const NavBar: React.FC = () => {
               </Link>
             ) : (
               <>
-                <button
-                  className="nav-button"
-                  style={{ color: contrastColor }}
-                  onClick={handleOpenPlaylistPortal}
-                >
-                  Playlists
-                </button>
-
                 {vizionaryName ? (
                   <>
                     <Link

@@ -1,7 +1,7 @@
 // App.tsx
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AudioPlayerProvider } from "react-use-audio-player";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
+import AlbumPlayer from "./AlbumPlayer";
 import HomePage from "./pages/HomePage";
 import DataFetching from "./DataFetching";
 import VizionaryProfile from "./pages/VizionaryProfile";
@@ -18,7 +18,7 @@ import UserList from "./UserList";
 import { NotificationProvider } from "./NotificationContext";
 import MusicUpload from "./MusicUpload";
 import PlaylistPortal from "./pages/PlaylistPortal";
-import ChatWindow from "./ChatWindow"; // ✅ Import Chat Window
+import ChatWindow from "./ChatWindow";
 import VizionaryOnboarding from "./pages/VizionaryOnboarding";
 import Events from "./pages/Events";
 
@@ -26,14 +26,14 @@ const AppContent: React.FC = () => {
   const { user } = useAuth();
   const userId = user ? user.uid : "";
 
-  // ✅ Track open chat user
+  // Track open chat user
   const [chatUser, setChatUser] = useState<{
     id: string;
     username: string;
     playlistId?: string;
   } | null>(null);
 
-  // ✅ Function to open chat when playlist is sent
+  // Function to open chat when playlist is sent
 
   return (
     <>
@@ -59,20 +59,26 @@ const AppContent: React.FC = () => {
         <Route path="/vizionary/:id" element={<VizionaryProfile />} />
         <Route path="/vizionaries" element={<VizionaryList />} />
         <Route path="/music-upload" element={<MusicUpload />} />
+        <Route path="/album/:albumId" element={<AlbumPlayerRoute />} />
       </Routes>
 
-      {/* ✅ Open Chat Window when chatUser is set */}
+      {/* Open Chat Window when chatUser is set */}
       {chatUser && (
         <ChatWindow
           receiverId={chatUser.id}
           receiverUsername={chatUser.username}
           senderId={userId}
-          onClose={() => setChatUser(null)} // ✅ Close when needed
+          onClose={() => setChatUser(null)} //  Close when needed
         />
       )}
     </>
   );
 };
+
+function AlbumPlayerRoute() {
+  const { albumId } = useParams(); // albumId comes from the URL
+  return albumId ? <AlbumPlayer albumId={albumId} /> : null;
+}
 
 const App: React.FC = () => {
   return (
@@ -80,21 +86,19 @@ const App: React.FC = () => {
       <NotificationProvider>
         <SongsProvider>
           <MusicContextProvider>
-            <AudioPlayerProvider>
-              <Router>
-                <div className="app-container">
-                  <header>
-                    <Navbar />
-                  </header>
-                  <main>
-                    <AppContent />
-                  </main>
-                  <footer>
-                    <AudioPlayerComponent />
-                  </footer>
-                </div>
-              </Router>
-            </AudioPlayerProvider>
+            <BrowserRouter>
+              <div className="app-container">
+                <header>
+                  <Navbar />
+                </header>
+                <main>
+                  <AppContent />
+                </main>
+                <footer>
+                  <AudioPlayerComponent />
+                </footer>
+              </div>
+            </BrowserRouter>
           </MusicContextProvider>
         </SongsProvider>
       </NotificationProvider>

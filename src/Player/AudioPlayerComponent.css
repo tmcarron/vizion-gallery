@@ -1,10 +1,15 @@
 /* Default: everything centered */
-
+:root {
+  --dominantColor: #ffffff;
+  --contrastColor: #000000;
+  --complementaryColor: #ff00ff;
+}
 .player-container {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
+  height: 100px !important;
   box-sizing: border-box;
   display: flex;
   background: var(--dominantColor, #222);
@@ -23,15 +28,18 @@
   background: none;
 }
 .player-container .vizionary-link {
+  margin-top: 0;
+  padding-top: 0;
   transform: translateY(0) !important;
+  margin-bottom: 0;
 }
 
 /* Ensure play/pause icons inherit the contrastColor */
 .player-controls img {
   filter: invert(1);
   mix-blend-mode: difference;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   transition: transform 0.2s ease-in-out;
 }
 .audio-controls {
@@ -51,6 +59,7 @@
 .audio-controls p {
   font-size: 14px;
   color: var(--contrastColor);
+  font-weight: 400;
   text-align: center;
   opacity: 0.85;
   font-weight: 500;
@@ -62,7 +71,13 @@
   text-decoration: none;
   font-weight: bold;
 }
-
+.audio-controls button {
+  margin-top: 0;
+}
+.audio-controls p {
+  padding: 0;
+  margin: 0;
+}
 .vizionary-link:hover {
   text-decoration: underline;
 }
@@ -98,10 +113,13 @@ h2 {
   margin: 6px 0;
 }
 
-p {
+.player-content p {
   font-size: 14px;
   color: #bbb;
   text-align: center;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  margin-top: 5px;
 }
 .player-content {
   position: fixed;
@@ -113,7 +131,7 @@ p {
   bottom: 0px;
   background-color: var(--dominantColor);
 }
-/* 🔄 Controls Section */
+/* Controls Section */
 .player-controls {
   display: flex;
   justify-content: center;
@@ -124,7 +142,7 @@ p {
   border: none !important;
 }
 
-/* 🌀 Shuffle & Collapse Buttons */
+/*  Shuffle & Collapse Buttons */
 .toggle-button,
 .shuffle-button {
   position: absolute;
@@ -147,67 +165,65 @@ p {
   right: 10px; /* Shuffle button on the right */
 }
 
-/* 🎯 Hover Effects */
+/*  Hover Effects */
 .toggle-button:hover,
 .shuffle-button:hover {
   background: rgba(0, 0, 0, 0.8);
 }
-
-/* 🔊 Progress Bar (Range Input) */
+/* Slim audio slider — progress painted via CSS variable */
 .audio-bar {
-  width: 200px;
-  height: 5px;
-  transform: translateY(-15px);
-  border: none;
-  appearance: none;
-  background: rgba(var(--complementaryColor), 0.3);
-  border-radius: 5px;
+  -webkit-appearance: none;
+  width: 50vw;
+  height: 2px;
+  border-radius: 2px;
+  cursor: pointer;
   outline: none;
-  transition: background 0.2s ease-in-out;
-  align-items: center !important;
-  justify-content: center !important;
+  margin: 15px 0;
+  padding: 0;
+  border: solid rgb(255, 255, 255) 1px;
+  background: linear-gradient(
+    to right,
+    var(--complementaryColor, #00c6ff) 0%,
+    var(--complementaryColor, #00c6ff) var(--progress, 0%),
+    var(--contrastColor, #666) var(--progress, 0%),
+    var(--contrastColor, #666) 100%
+  );
 }
 
-/* 🔵 Progress Fill */
-.audio-bar::-webkit-slider-runnable-track {
-  height: 5px;
+/* Firefox supports a built‑in progress pseudo‑element */
+.audio-bar::-moz-range-progress {
+  height: 2px !important;
   background: var(--complementaryColor);
-  border-radius: 5px;
+  border-radius: 2px;
+  padding: 0;
+  margin: 0;
 }
 
-/* 🎯 Draggable Knob */
 .audio-bar::-webkit-slider-thumb {
-  appearance: none;
+  -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: rgb(255, 140, 0);
-  margin-top: -3px;
-
   border-radius: 50%;
+  background: var(--complementaryColor, #00c6ff);
+  border: solid rgb(255, 255, 255);
   cursor: pointer;
-  transition: transform 0.2s ease-in-out, background 0.2s ease-in-out;
+  transition: transform 0.15s ease;
 }
 
-/* 🔥 Knob Hover Effect */
-.audio-bar::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-}
-
-/* 🟠 Firefox Support */
-.audio-bar::-moz-range-track {
-  height: 5px;
-  background: var(--complementaryColor);
-  border-radius: 5px;
-}
+/* Thumb (knob) — same color as progress */
 .audio-bar::-moz-range-thumb {
+  -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: var(--contrastColor);
   border-radius: 50%;
+  border: solid black;
+  background: var(--complementaryColor, #00c6ff);
+  border: none;
   cursor: pointer;
-  transition: transform 0.2s ease-in-out;
+  transition: transform 0.15s ease;
 }
-.audio-bar::-moz-range-thumb:hover {
+
+.audio-bar:active::-webkit-slider-thumb,
+.audio-bar:active::-moz-range-thumb {
   transform: scale(1.2);
-  background: var(--dominantColor);
 }

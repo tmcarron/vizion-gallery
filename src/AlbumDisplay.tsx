@@ -4,30 +4,36 @@ import Song from "./models/Song";
 import "./AlbumDisplay.css";
 import { MusicContext } from "./Player/MusicContext";
 import SongDisplay from "./SongDisplay";
+import { Link } from "react-router-dom";
 
 interface AlbumDisplayProps {
   albums?: Album[];
+  /** Callback fired when the user wants to delete an album */
+  onAlbumRemove?: (albumId: string) => void;
 }
 
-const AlbumDisplay: React.FC<AlbumDisplayProps> = ({ albums = [] }) => {
+const AlbumDisplay: React.FC<AlbumDisplayProps> = ({
+  albums = [],
+  onAlbumRemove,
+}) => {
   const { setArmedPlaylist, setSelectedSong, allSongs } =
     useContext(MusicContext);
-  const [expandedAlbum, setExpandedAlbum] = useState<string | null>(null);
+  const [expandedAlbum] = useState<string | null>(null);
 
-  // ✅ Play the full album and arm it as a playlist
+  // Play the full album and arm it as a playlist
   const handlePlayAlbum = (album: Album) => {
-    console.log("📀 Album clicked:", album.title, "ID:", album.id);
+    console.log(" Album clicked:", album.title, "ID:", album.id);
 
     if (!album.songIds || album.songIds.length === 0) {
-      console.warn(`⚠️ No song IDs found for album: ${album.title}`);
+      console.warn(` No song IDs found for album: ${album.title}`);
       return;
     }
 
-    console.log("🔍 Album contains song IDs in this order:", album.songIds);
+    console.log(" Album contains song IDs in this order:", album.songIds);
 
-    console.log("🎵 Checking all available songs...");
+    console.log(" Checking all available songs...");
     allSongs.forEach((song) => {
-      console.log(`🎵 Song: ${song.title}, ID: ${song.id}`);
+      console.log(` Song: ${song.title}, ID: ${song.id}`);
     });
 
     // ✅ Ensure albumSongs appear in the correct order using `map()`
@@ -57,10 +63,6 @@ const AlbumDisplay: React.FC<AlbumDisplayProps> = ({ albums = [] }) => {
       setSelectedSong(albumSongs[0]);
     }, 200);
   };
-  // ✅ Toggle album expansion
-  const toggleAlbumExpansion = (albumId: string) => {
-    setExpandedAlbum(expandedAlbum === albumId ? null : albumId);
-  };
 
   return (
     <div className="album-display">
@@ -82,22 +84,28 @@ const AlbumDisplay: React.FC<AlbumDisplayProps> = ({ albums = [] }) => {
 
               {/* Play Button to Arm the Album */}
               <button
-                className="play-album-button"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   handlePlayAlbum(album);
                 }}
               >
-                Play Album
+                <Link to={`/album/${album.id}`} className="play-album-button">
+                  Play Album
+                </Link>
               </button>
 
-              {/* Expand Songs Button */}
-              <button
-                className="expand-album-button"
-                onClick={() => toggleAlbumExpansion(album.id)}
-              >
-                {expandedAlbum === album.id ? "Close Songs" : "Show Songs"}
-              </button>
+              {onAlbumRemove && (
+                <button
+                  className="remove-album-button text-red-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Are you sure you want to delete?")) {
+                      onAlbumRemove(album.id);
+                    }
+                  }}
+                >
+                  Remove Album
+                </button>
+              )}
 
               {/* Expandable Songs Section */}
               {expandedAlbum === album.id && (

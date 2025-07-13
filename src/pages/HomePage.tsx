@@ -101,6 +101,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="HomePage">
       <h1>Vizion Gallery</h1>
+      <p className="catchphrase">Anything you can envizion</p>
 
       {/* Play All Button */}
       <button className="play-all-button" onClick={handlePlayAll}>
