@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import {
   doc,
@@ -9,9 +9,11 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { MusicContext } from "../Player/MusicContext";
 import "./VizionaryProfile.css";
 import SongDisplay from "../SongDisplay";
 import Album from "../models/Album";
+import Song from "../models/Song";
 import AlbumDisplay from "../AlbumDisplay";
 
 const VizionaryProfile: React.FC = () => {
@@ -22,6 +24,48 @@ const VizionaryProfile: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [albumSongIds, setAlbumSongIds] = useState<Set<string>>(new Set()); // Store song IDs in albums
   const [loading, setLoading] = useState<boolean>(true);
+
+  const { setArmedPlaylist } = useContext(MusicContext);
+
+  // 🔊 Arm playlist with ALL songs by this vizionary and start playback
+  const handlePlayVizionary = async () => {
+    if (!vizionaryName || !setArmedPlaylist) return;
+
+    try {
+      // 1️⃣ Fetch every song where this vizionary appears
+      const songsQuery = query(
+        collection(db, "songs"),
+        where("vizionaries", "array-contains", vizionaryName)
+      );
+      const snapshot = await getDocs(songsQuery);
+
+      // 2️⃣ Order newest → oldest
+      const toMillis = (d: any) =>
+        d?.toMillis ? d.toMillis() : new Date(d ?? 0).getTime();
+      const sortedSongs = snapshot.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() } as Song))
+        .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+
+      const songIds = sortedSongs.map((s) => s.id);
+
+      if (songIds.length === 0) {
+        console.warn("No songs found for vizionary:", vizionaryName);
+        return;
+      }
+
+      // 3️⃣ Tell the global MusicContext to arm & play
+      await setArmedPlaylist({
+        id: `viz_${vizionaryName}_all`,
+        name: `${vizionaryName} – All Songs`,
+        createdBy: "System",
+        createdAt: new Date(),
+        songIds,
+      });
+      // MusicContext will select the first track and start playback
+    } catch (error) {
+      console.error("Error arming vizionary playlist:", error);
+    }
+  };
 
   console.log(albumSongIds);
   useEffect(() => {
@@ -138,6 +182,9 @@ const VizionaryProfile: React.FC = () => {
         <h1 className="vizionary-name">
           {vizionaryName || "Unknown Vizionary"}
         </h1>
+        <button className="play-vizionary-btn" onClick={handlePlayVizionary}>
+          Play {vizionaryName || "Vizionary"}
+        </button>
 
         {bio && bio !== "This vizionary has not written a bio yet." && (
           <p className="vizionary-bio">{bio}</p>
@@ -145,11 +192,7 @@ const VizionaryProfile: React.FC = () => {
       </div>
 
       {/* Display Albums */}
-      {albums.length > 0 ? (
-        <AlbumDisplay albums={albums} />
-      ) : (
-        <p>No albums available for this Vizionary.</p>
-      )}
+      {albums.length > 0 ? <AlbumDisplay albums={albums} /> : <></>}
 
       {/* Display Songs (Filtered to exclude album songs) */}
       <SongDisplay vizionaryId={id!} />
