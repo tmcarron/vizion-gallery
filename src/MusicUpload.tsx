@@ -247,36 +247,32 @@ const MusicUpload: React.FC = () => {
             }
           );
 
-          let finalSongDocId: string | null = null;
+          // Always upload the song immediately, starting with only the uploader in vizionaries
+          const songDoc = await addDoc(collection(db, "songs"), {
+            title: song.title,
+            audio: audioURL,
+            coverArt: coverArtURL,
+            order: index + 1,
+            albumId,
+            vizionaries: [vizionaryName],
+            uploader: user.uid,
+            createdAt: serverTimestamp(),
+          });
+          const finalSongDocId = songDoc.id;
 
-          if (song.collaborators.length === 0) {
-            // No collaborators → upload immediately
-            finalSongDocId = (
-              await addDoc(collection(db, "songs"), {
-                title: song.title,
-                audio: audioURL,
-                coverArt: coverArtURL,
-                order: index + 1,
-                albumId,
-                vizionaries: [vizionaryName],
-                uploader: user.uid,
-                createdAt: serverTimestamp(),
-              })
-            ).id;
-          } else if (song.collaborators.length > 0) {
-            // No collaborators → upload immediately
-            finalSongDocId = (
-              await addDoc(collection(db, "songs"), {
-                title: song.title,
-                audio: audioURL,
-                coverArt: coverArtURL,
-                order: index + 1,
-                albumId,
-                vizionaries: [vizionaryName],
-                uploader: user.uid,
-                createdAt: serverTimestamp(),
-              })
-            ).id;
+          // If collaborators are selected, send collab requests to each
+          if (song.collaborators.length > 0) {
+            for (const collabId of song.collaborators) {
+              const toUserId = await getOwnerUid(collabId);
+              if (toUserId && toUserId !== user.uid) {
+                // Avoid sending to self
+                await sendChatMessage(
+                  toUserId,
+                  `Invitation to collaborate on "${song.title}" by ${vizionaryName}. Accept to be added as a vizionary.`,
+                  { songRequestId: finalSongDocId }
+                );
+              }
+            }
           }
 
           return finalSongDocId;

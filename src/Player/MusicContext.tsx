@@ -129,11 +129,11 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setArmedPlaylistState(defaultPlaylist);
-      console.log("✅ Default Playlist Armed:", defaultPlaylist);
+      console.log("Default Playlist Armed:", defaultPlaylist);
 
       // Set first song
       setSelectedSong(shuffledSongs[0]);
-      console.log("▶️ Playing first shuffled song:", shuffledSongs[0].title);
+      console.log("Playing first shuffled song:", shuffledSongs[0].title);
     }
   }, []);
 
@@ -147,23 +147,25 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
         songsLoadedRef.current = true; // Mark as loaded immediately to prevent double loading
 
         const snapshot = await getDocs(collection(db, "songs"));
-        const songsList: Song[] = snapshot.docs.map((docSnap) => {
-          const songData = docSnap.data();
-          return {
-            id: docSnap.id,
-            title: songData.title || "Untitled",
-            albumId:
-              songData.albumId ||
-              songData.AlbumID ||
-              songData.album_id ||
-              undefined,
-            audio: songData.audio || "",
-            coverArt: songData.coverArt || "",
-            vizionaries: songData.vizionaries || [],
-          };
-        });
+        const songsList: Song[] = await Promise.all(
+          snapshot.docs.map(async (docSnap) => {
+            const songData = docSnap.data();
+            return {
+              id: docSnap.id,
+              title: songData.title || "Untitled",
+              albumId:
+                songData.albumId ||
+                songData.AlbumID ||
+                songData.album_id ||
+                undefined,
+              audio: await convertGsUrlToHttps(songData.audio || ""),
+              coverArt: await convertGsUrlToHttps(songData.coverArt || ""),
+              vizionaries: songData.vizionaries || [],
+            };
+          })
+        );
 
-        console.log("🎧 All Songs Loaded from Firestore:", songsList);
+        console.log("All Songs Loaded from Firestore:", songsList);
         setAllSongs(songsList);
       } catch (error) {
         console.error("Error fetching songs:", error);
@@ -172,7 +174,7 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     fetchSongs();
-  }, []); // Empty dependency array to run only once
+  }, [convertGsUrlToHttps]); // Added dependency
 
   // Initialize the playlist and selected song after songs are loaded
   useEffect(() => {
@@ -197,7 +199,7 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
           if (complementary && complementary !== complementaryColor)
             setComplementaryColor(complementary);
 
-          // 🔹 Add a small delay before re-rendering to prevent layout shift
+          // Add a small delay before re-rendering to prevent layout shift
           setTimeout(() => {
             document.documentElement.style.setProperty("--dominantColor", base);
             document.documentElement.style.setProperty(
@@ -211,7 +213,7 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
           }, 50);
         }
       } catch (error) {
-        console.error("❌ Error fetching colors:", error);
+        console.error("Error fetching colors:", error);
       }
     };
 
@@ -219,7 +221,7 @@ const MusicContextProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       isCancelled = true;
     };
-  }, [selectedSong]);
+  }, [selectedSong, convertGsUrlToHttps]); // Added dependency
 
   // Update global CSS variables for colors
   useEffect(() => {

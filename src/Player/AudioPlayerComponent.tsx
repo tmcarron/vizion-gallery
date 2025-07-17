@@ -34,7 +34,7 @@ const AudioPlayerComponent: React.FC = () => {
     const loadAndPlaySong = async () => {
       if (!audioRef.current || !selectedSong?.audio) return;
 
-      console.log("🎵 Loading song:", selectedSong.title);
+      console.log("Loading song:", selectedSong.title);
 
       audioRef.current.pause();
       let audioUrl = selectedSong.audio;
