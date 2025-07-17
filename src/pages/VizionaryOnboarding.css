@@ -52,7 +52,7 @@
   text-align: center;
   border: none;
   background-color: white !important;
-  color: black;
+  color: black !important;
   border-bottom: 2px solid var(--dominantColor);
   transition: all 0.3s ease-in-out;
   width: 350px;

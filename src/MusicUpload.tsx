@@ -250,7 +250,7 @@ const MusicUpload: React.FC = () => {
           let finalSongDocId: string | null = null;
 
           if (song.collaborators.length === 0) {
-            // 🔷 No collaborators → upload immediately
+            // No collaborators → upload immediately
             finalSongDocId = (
               await addDoc(collection(db, "songs"), {
                 title: song.title,
@@ -263,34 +263,20 @@ const MusicUpload: React.FC = () => {
                 createdAt: serverTimestamp(),
               })
             ).id;
-          } else {
-            // 🔶 Has collaborators → create a pending request
-            const requestRef = await addDoc(collection(db, "songRequests"), {
-              title: song.title,
-              audio: audioURL,
-              coverArt: coverArtURL,
-              albumId, // optional: keep linkage
-              uploader: user.uid,
-              collaborators: song.collaborators,
-              vizionaryName,
-              status: "pending", // pending | accepted | rejected
-              createdAt: serverTimestamp(),
-            });
-
-            // Notify each collaborator in chat
-            for (const vizId of song.collaborators) {
-              const ownerUid = await getOwnerUid(vizId);
-              if (!ownerUid) continue; // skip if vizionary has no owner
-
-              await sendChatMessage(
-                ownerUid,
-                `${vizionaryName} wants you to collaborate on “${song.title}”.`,
-                {
-                  type: "collab_request",
-                  songRequestId: requestRef.id, // whatever you store
-                }
-              );
-            }
+          } else if (song.collaborators.length > 0) {
+            // No collaborators → upload immediately
+            finalSongDocId = (
+              await addDoc(collection(db, "songs"), {
+                title: song.title,
+                audio: audioURL,
+                coverArt: coverArtURL,
+                order: index + 1,
+                albumId,
+                vizionaries: [vizionaryName],
+                uploader: user.uid,
+                createdAt: serverTimestamp(),
+              })
+            ).id;
           }
 
           return finalSongDocId;

@@ -14,7 +14,7 @@ import {
 import { auth, db } from "./firebase"; // Ensure this points to Firebase
 import { doc, getDoc } from "firebase/firestore";
 
-// ✅ Extend Firebase User with Vizionary fields
+// Extend Firebase User with Vizionary fields
 interface ExtendedUser extends FirebaseUser {
   isVizionary?: boolean;
   vizionaryId?: string;

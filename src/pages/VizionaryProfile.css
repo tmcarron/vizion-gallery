@@ -90,3 +90,6 @@ button:hover {
   border: 1px solid #ccc;
   margin-bottom: 10px;
 }
+.play-vizionary-btn {
+  margin-bottom: 20px !important;
+}
