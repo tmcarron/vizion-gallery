@@ -55,13 +55,17 @@ const NavBar: React.FC = () => {
             >
               Home
             </Link>
-            <Link
-              to="/vizionary-applications"
-              className="apply-button"
-              style={{ color: contrastColor }}
-            >
-              Become a Vizionary
-            </Link>
+            {!vizionaryName ? (
+              <Link
+                to="/vizionary-applications"
+                className="apply-button"
+                style={{ color: contrastColor }}
+              >
+                Become a Vizionary
+              </Link>
+            ) : (
+              <></>
+            )}
           </section>
 
           {/* SECTION 2: User Actions */}
