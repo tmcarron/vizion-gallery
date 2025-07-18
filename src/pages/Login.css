@@ -76,7 +76,7 @@ body {
   padding: 12px;
   font-size: 1.1rem;
   font-weight: bold;
-  background: var(--contrastColor);
+  background-color: var(--dominantColor) !important;
   color: var(--dominantColor);
   border: none;
   border-radius: 8px;
@@ -87,7 +87,6 @@ body {
 }
 
 .login-container button:hover {
-  background: var(--contrastColor);
   opacity: 0.85;
   transform: scale(1.05);
 }
