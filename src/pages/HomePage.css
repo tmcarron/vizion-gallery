@@ -111,12 +111,15 @@ a {
 
 .search-song-title {
   font-size: 14px;
-  color: var(--dominatColor) !important;
+  color: var(--dominantColor) !important;
 }
 .vizionary-link {
   margin-bottom: 35px;
-  color: var(--dominatColor) !important;
+  color: var(--contrastColor) !important;
 }
 .catchphrase {
   color: var(--contrastColor);
+}
+button.play-all-button {
+  background-color: var(--dominantColor);
 }

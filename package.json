@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "@google-cloud/storage": "^7.15.2",
     "@sina_byn/re-audio": "^1.1.0",

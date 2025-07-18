@@ -53,7 +53,7 @@ const AudioPlayerComponent: React.FC = () => {
           try {
             await audioRef.current!.play();
           } catch (error) {
-            console.error("❌ Error playing audio:", error);
+            console.error("Error playing audio:", error);
           }
         }
       };
@@ -163,7 +163,7 @@ const AudioPlayerComponent: React.FC = () => {
     if (prevSong) {
       setSelectedSong(prevSong);
     } else {
-      console.warn("⚠️ Previous song not found:", prevSongId);
+      console.warn("Previous song not found:", prevSongId);
     }
   }, [selectedSong, armedPlaylist, setSelectedSong, allSongs]);
 
@@ -197,7 +197,7 @@ const AudioPlayerComponent: React.FC = () => {
 
   const handlePlayPause = useCallback(() => {
     if (!audioRef.current || !audioRef.current.src) {
-      console.warn("⚠️ No audio source found.");
+      console.warn("No audio source found.");
       return;
     }
 
@@ -209,12 +209,12 @@ const AudioPlayerComponent: React.FC = () => {
           console.log("▶️ Playing");
         })
         .catch((error) => {
-          console.error("❌ Error playing audio:", error);
+          console.error("Error playing audio:", error);
         });
     } else {
       audioRef.current.pause();
       setIsPlaying(false);
-      console.log("⏸️ Paused");
+      console.log("Paused");
     }
   }, []);
   useEffect(() => {

@@ -129,7 +129,7 @@ h2 {
   align-items: center !important;
   justify-content: center;
   bottom: 0px;
-  background-color: var(--dominantColor);
+  background-color: var(--dominantColor) !important;
 }
 /* Controls Section */
 .player-controls {

@@ -41,7 +41,7 @@ const AppContent: React.FC = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route
-          path="/vizionary-recruiting"
+          path="/vizionary-applications"
           element={<VizionaryApplications />}
         />
         <Route path="/vizionary-onboarding" element={<VizionaryOnboarding />} />
